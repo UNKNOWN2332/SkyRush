@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: SkyRush
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/SkyRush
+    username: SkyRush
+    password: 123
+  sql:
+    init:
+      mode: always
