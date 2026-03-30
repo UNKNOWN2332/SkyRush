@@ -1,5 +1,6 @@
 package uz.shukrullaev.com.skyrush.DTOs
 
+import jakarta.validation.constraints.NotBlank
 import org.springframework.security.crypto.password.PasswordEncoder
 import uz.shukrullaev.com.skyrush.Entities.Users
 import uz.shukrullaev.com.skyrush.Entities.Wallet
@@ -24,6 +25,19 @@ data class RegisterRequest(
     val username: String,
     val email: String,
     val password: String
+)
+
+data class LoginRequest(
+    @field:NotBlank(message = "Username must not be empty")
+    val username: String,
+
+    @field:NotBlank(message = "Password must not be empty")
+    val password: String
+)
+
+data class LoginResponse(
+    val token: String,
+    val user: UserResponse
 )
 
 fun Users.toResponse(wallet: Wallet): UserResponse {

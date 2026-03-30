@@ -31,3 +31,13 @@ class EmailAlreadyExistsException(private val email: String) : SkyRushException(
     override fun errorType() = ExceptionsCode.EMAIL_ALREADY_EXISTS
     override fun getErrorMessageArguments(): Array<Any?> = arrayOf(email)
 }
+
+class UsernameOrPasswordIncorrect(private val email: String) : SkyRushException() {
+    override fun errorType() = ExceptionsCode.EMAIL_ALREADY_EXISTS
+    override fun getErrorMessageArguments(): Array<Any?> = arrayOf(email)
+}
+
+class ObjectIdNotFoundException(private val userId: Long) : SkyRushException() {
+    override fun errorType() = ExceptionsCode.EMAIL_ALREADY_EXISTS
+    override fun getErrorMessageArguments(): Array<Any?> = arrayOf(userId)
+}

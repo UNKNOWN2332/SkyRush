@@ -3,13 +3,14 @@ package uz.shukrullaev.com.skyrush.Services
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import uz.shukrullaev.com.skyrush.DTOs.RegisterRequest
-import uz.shukrullaev.com.skyrush.DTOs.UserResponse
-import uz.shukrullaev.com.skyrush.DTOs.toEntity
-import uz.shukrullaev.com.skyrush.DTOs.toResponse
+import uz.shukrullaev.com.skyrush.Config.JWT.JwtProvider
+import uz.shukrullaev.com.skyrush.DTOs.*
+import uz.shukrullaev.com.skyrush.Entities.Users
 import uz.shukrullaev.com.skyrush.Entities.Wallet
 import uz.shukrullaev.com.skyrush.Exceptions.EmailAlreadyExistsException
+import uz.shukrullaev.com.skyrush.Exceptions.ObjectIdNotFoundException
 import uz.shukrullaev.com.skyrush.Exceptions.UsernameAlreadyExistsException
+import uz.shukrullaev.com.skyrush.Exceptions.UsernameOrPasswordIncorrect
 import uz.shukrullaev.com.skyrush.Repositories.UserRepository
 import uz.shukrullaev.com.skyrush.Repositories.WalletRepository
 
@@ -24,7 +25,8 @@ import uz.shukrullaev.com.skyrush.Repositories.WalletRepository
 class AuthService(
     private val userRepository: UserRepository,
     private val walletRepository: WalletRepository,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
+    private val jwtProvider: JwtProvider
 ) {
 
     @Transactional
@@ -36,6 +38,30 @@ class AuthService(
         val wallet = walletRepository.save(Wallet(userId = user.id!!, goldCoins = 0))
 
         return user.toResponse(wallet)
+    }
+
+    suspend fun login(request: LoginRequest): LoginResponse {
+        val user = validateRequest(request)
+
+        val wallet = walletRepository.findByUserId(user.id!!)
+            ?: throw ObjectIdNotFoundException(user.id)
+
+        val token = jwtProvider.generateToken(user)
+
+        return LoginResponse(
+            token = token,
+            user = user.toResponse(wallet)
+        )
+    }
+
+    private suspend fun validateRequest(request: LoginRequest): Users {
+        val user = userRepository.findByUsername(request.username)
+            ?: throw UsernameOrPasswordIncorrect(request.username)
+
+        if (!passwordEncoder.matches(request.password, user.password)) {
+            throw UsernameOrPasswordIncorrect(request.username)
+        }
+        return user
     }
 
     private suspend fun validateUniqueness(request: RegisterRequest) {
