@@ -23,9 +23,4 @@ class GlobalExceptionHandler(
     fun handleHrmException(ex: SkyRushException): ResponseEntity<BaseMessage> {
         return ResponseEntity.badRequest().body(ex.getErrorMessage(errorMessageSource))
     }
-
-    @ExceptionHandler(Exception::class)
-    fun handleGeneralException(ex: Exception): ResponseEntity<String> {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.message)
-    }
 }
