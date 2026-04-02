@@ -3,7 +3,7 @@ package uz.shukrullaev.com.skyrush.services
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.springframework.stereotype.Service
-import uz.shukrullaev.com.skyrush.dtos.*
+import uz.shukrullaev.com.skyrush.DTOs.*
 import uz.shukrullaev.com.skyrush.repositories.CategoryRepository
 
 

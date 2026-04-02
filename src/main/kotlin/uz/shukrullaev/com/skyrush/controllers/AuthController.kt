@@ -6,10 +6,10 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import uz.shukrullaev.com.skyrush.dtos.LoginRequest
-import uz.shukrullaev.com.skyrush.dtos.LoginResponse
-import uz.shukrullaev.com.skyrush.dtos.RegisterRequest
-import uz.shukrullaev.com.skyrush.dtos.UserResponse
+import uz.shukrullaev.com.skyrush.DTOs.LoginRequest
+import uz.shukrullaev.com.skyrush.DTOs.LoginResponse
+import uz.shukrullaev.com.skyrush.DTOs.RegisterRequest
+import uz.shukrullaev.com.skyrush.DTOs.UserResponse
 import uz.shukrullaev.com.skyrush.services.AuthService
 
 

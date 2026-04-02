@@ -3,9 +3,9 @@ package uz.shukrullaev.com.skyrush.controllers
 import kotlinx.coroutines.flow.Flow
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
-import uz.shukrullaev.com.skyrush.dtos.CategoryCreateRequest
-import uz.shukrullaev.com.skyrush.dtos.CategoryResponse
-import uz.shukrullaev.com.skyrush.dtos.CategoryUpdateRequest
+import uz.shukrullaev.com.skyrush.DTOs.CategoryCreateRequest
+import uz.shukrullaev.com.skyrush.DTOs.CategoryResponse
+import uz.shukrullaev.com.skyrush.DTOs.CategoryUpdateRequest
 import uz.shukrullaev.com.skyrush.services.CategoryService
 
 

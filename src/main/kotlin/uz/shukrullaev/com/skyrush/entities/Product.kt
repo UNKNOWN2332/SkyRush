@@ -3,7 +3,6 @@ package uz.shukrullaev.com.skyrush.entities
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
-import java.math.BigDecimal
 
 
 /**
@@ -15,18 +14,14 @@ import java.math.BigDecimal
 @Table("products")
 data class Product(
     @Id var id: Long? = null,
-
-    @Column("category_id")
-    val categoryId: Long,
-
+    @Column("category_id") val categoryId: Long,
     val name: String,
-    val price: BigDecimal,
+    val price: java.math.BigDecimal,
+    @Column("original_price") val originalPrice: java.math.BigDecimal,
+    @Column("provider_product_id") val providerProductId: String? = null, // null bo'lishi mumkin bo'lsa ? qo'yish shart
+    val status: String = "ACTIVE",
 
-    @Column("original_price")
-    val originalPrice: BigDecimal,
-
-    @Column("provider_product_id")
-    val providerProductId: String,
-
-    val status: String = "ACTIVE"
+    // Mana bu ikki qatorni qo'shib qo'y:
+    @Column("created_at") val createdAt: java.time.LocalDateTime? = null,
+    @Column("updated_at") val updatedAt: java.time.LocalDateTime? = null
 )

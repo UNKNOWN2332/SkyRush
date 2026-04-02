@@ -4,7 +4,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uz.shukrullaev.com.skyrush.config.JWT.JwtProvider
-import uz.shukrullaev.com.skyrush.dtos.*
+import uz.shukrullaev.com.skyrush.DTOs.*
 import uz.shukrullaev.com.skyrush.entities.Users
 import uz.shukrullaev.com.skyrush.entities.Wallet
 import uz.shukrullaev.com.skyrush.exceptions.EmailAlreadyExistsException

@@ -1,4 +1,4 @@
-package uz.shukrullaev.com.skyrush.dtos
+package uz.shukrullaev.com.skyrush.DTOs
 
 import jakarta.validation.constraints.NotBlank
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -11,7 +11,7 @@ import java.time.Instant
 
 
 /**
- * @see uz.shukrullaev.com.skyrush.dtos
+ * @see uz.shukrullaev.com.skyrush.DTOs
  * @author Abdulloh
  * @since 25/03/2026 7:50 am
  */

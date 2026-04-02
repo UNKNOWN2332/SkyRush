@@ -1,5 +1,6 @@
 import { FormEvent, useMemo, useState } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { authService, type BaseMessage, type LoginRequest, type RegisterRequest } from '../api/authService';
 
@@ -15,6 +16,7 @@ const formatError = (err: unknown) => {
 const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
 export const Login = () => {
+  const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>('login');
   const [busy, setBusy] = useState(false);
   const [loginForm, setLoginForm] = useState<LoginRequest>({ username: '', password: '' });
@@ -36,6 +38,7 @@ export const Login = () => {
     try {
       await authService.login({ username: loginForm.username.trim(), password: loginForm.password });
       toast.success('Login successful');
+      navigate('/', { replace: true });
     } catch (err) {
       toast.error(formatError(err));
     } finally {
@@ -207,7 +210,6 @@ export const Login = () => {
         </div>
       </div>
 
-      <ToastContainer position="top-right" autoClose={3000} newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover theme="dark" />
     </div>
   );
 };

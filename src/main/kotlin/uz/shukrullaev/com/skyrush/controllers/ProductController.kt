@@ -3,9 +3,9 @@ package uz.shukrullaev.com.skyrush.controllers
 import kotlinx.coroutines.flow.Flow
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
-import uz.shukrullaev.com.skyrush.dtos.ProductCreateRequest
-import uz.shukrullaev.com.skyrush.dtos.ProductResponse
-import uz.shukrullaev.com.skyrush.dtos.ProductUpdateRequest
+import uz.shukrullaev.com.skyrush.DTOs.ProductCreateRequest
+import uz.shukrullaev.com.skyrush.DTOs.ProductResponse
+import uz.shukrullaev.com.skyrush.DTOs.ProductUpdateRequest
 import uz.shukrullaev.com.skyrush.services.ProductService
 
 /**

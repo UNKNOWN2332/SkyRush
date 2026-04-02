@@ -4,6 +4,7 @@ import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 import org.springframework.stereotype.Repository
 import uz.shukrullaev.com.skyrush.entities.Product
 import kotlinx.coroutines.flow.Flow
+import org.springframework.data.r2dbc.repository.Query
 
 /**
  * @see uz.shukrullaev.com.skyrush.repositories
@@ -13,5 +14,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Repository
 interface ProductRepository : CoroutineCrudRepository<Product, Long> {
-    fun findAllByCategoryIdAndStatus(categoryId: Long, status: String = "ACTIVE"): Flow<Product>
+
+    @Query("SELECT * FROM products WHERE category_id = :categoryId AND status = :status")
+    fun findAllByCategoryIdAndStatus(categoryId: Long, status: String): Flow<Product>
+
 }
+
