@@ -1,3 +1,4 @@
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -6,7 +7,9 @@ import { CategoryPage } from './pages/CategoryPage';
 import { HomePage } from './pages/HomePage';
 import { ProductCheckoutPage } from './pages/ProductCheckoutPage';
 
-export default function App() {
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
+
+function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
@@ -17,5 +20,16 @@ export default function App() {
       </Routes>
       <ToastContainer position="top-right" autoClose={3000} newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover theme="dark" />
     </BrowserRouter>
+  );
+}
+
+export default function App() {
+  if (!googleClientId) {
+    return <AppRoutes />;
+  }
+  return (
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <AppRoutes />
+    </GoogleOAuthProvider>
   );
 }

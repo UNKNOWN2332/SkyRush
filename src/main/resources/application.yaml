@@ -11,3 +11,8 @@ spring:
 jwt:
   secret: "juda_uzun_va_maxfiy_kalit_shu_yerda_bolishi_shart_32_belgi"
   expiration: 86400000 # 24 soat (ms da)
+
+# Google Identity Services (Web) client ID — VITE bilan bir xil bo‘lishi kerak
+google:
+  oauth:
+    client-id: "691038508358-9fjig635aspra54lmsrrbnp5q70kcqdu.apps.googleusercontent.com"

@@ -16,3 +16,18 @@ export async function mockVerifyPlayerId(params: {
   }
   return { ok: true, message: "O'yinchi ID muvaffaqiyatli tekshirildi (mock)." };
 }
+
+export async function mockLookupPlayer(params: {
+  playerId: string;
+  zoneId: string | null;
+  hasZoneId: boolean;
+}): Promise<{ ok: boolean; displayName: string | null; message: string }> {
+  const base = await mockVerifyPlayerId(params);
+  if (!base.ok) {
+    return { ok: false, displayName: null, message: base.message };
+  }
+  const tail = params.playerId.trim().slice(-4);
+  const zone = params.hasZoneId ? (params.zoneId ?? '').trim() : '';
+  const displayName = params.hasZoneId ? `| SkyRush_${tail} · S${zone} |` : `| SkyRush_${tail} |`;
+  return { ok: true, displayName, message: base.message };
+}

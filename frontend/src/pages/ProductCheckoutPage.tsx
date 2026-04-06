@@ -1,22 +1,22 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { catalogService, type CategoryDto, type ProductDto } from '../api/catalogService';
 import { getStoredUser, isAuthenticated } from '../api/authService';
-import {
-  BrandLayout,
-  glassCardClass,
-  ghostButtonClass,
-  inputClass,
-  labelClass,
-  primaryButtonClass,
-} from '../components/BrandLayout';
-import { mockVerifyPlayerId } from '../mock/playerCheck';
+import { BrandLayout, glassCardClass, ghostButtonClass, primaryButtonClass } from '../components/BrandLayout';
+import { canSelectProduct } from '../components/CategoryPlayerPanel';
+import { useShopRegion } from '../lib/region';
+import type { CategoryCheckoutState } from '../types/categoryCheckout';
 
-const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+const LOOKUP_SIZE = 200;
 
 export function ProductCheckoutPage() {
+  const { t } = useTranslation();
   const { categoryId, productId } = useParams<{ categoryId: string; productId: string }>();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const region = useShopRegion();
   const catId = Number(categoryId);
   const prodId = Number(productId);
 
@@ -24,20 +24,25 @@ export function ProductCheckoutPage() {
   const [product, setProduct] = useState<ProductDto | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const [playerId, setPlayerId] = useState('');
-  const [zoneId, setZoneId] = useState('');
-  const [guestEmail, setGuestEmail] = useState('');
-  const [checkBusy, setCheckBusy] = useState(false);
-  const [idVerified, setIdVerified] = useState(false);
-
-  const authed = isAuthenticated();
+  const checkout = (location.state as CategoryCheckoutState | null) ?? null;
+  const guestMode = !isAuthenticated();
   const profileEmail = getStoredUser()?.email ?? '';
-  const hasZone = category?.hasZoneId ?? false;
+  const receiptEmail = guestMode ? (checkout?.guestEmail?.trim() ?? '') : profileEmail;
 
   const validParams = useMemo(
     () => Number.isFinite(catId) && catId > 0 && Number.isFinite(prodId) && prodId > 0,
     [catId, prodId]
   );
+
+  const checkoutOk = checkout && canSelectProduct(checkout, guestMode);
+
+  useEffect(() => {
+    const onRegionChange = () => {
+      navigate('/', { replace: true });
+    };
+    window.addEventListener('skyrush-region', onRegionChange);
+    return () => window.removeEventListener('skyrush-region', onRegionChange);
+  }, [navigate]);
 
   useEffect(() => {
     if (!validParams) {
@@ -48,14 +53,14 @@ export function ProductCheckoutPage() {
     (async () => {
       try {
         const [cats, prods] = await Promise.all([
-          catalogService.getActiveCategories(),
-          catalogService.getProductsByCategory(catId),
+          catalogService.getActiveCategories(region, 0, LOOKUP_SIZE),
+          catalogService.getProductsByCategory(catId, 0, LOOKUP_SIZE),
         ]);
         if (cancelled) return;
         setCategory(cats.find((c) => c.id === catId) ?? null);
         setProduct(prods.find((p) => p.id === prodId) ?? null);
       } catch {
-        if (!cancelled) toast.error('Ma’lumot yuklanmadi.');
+        if (!cancelled) toast.error(t('checkout.toastFetchError'));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -63,56 +68,20 @@ export function ProductCheckoutPage() {
     return () => {
       cancelled = true;
     };
-  }, [catId, prodId, validParams]);
-
-  useEffect(() => {
-    setIdVerified(false);
-  }, [playerId, zoneId, catId, prodId]);
-
-  const onCheck = async () => {
-    setCheckBusy(true);
-    try {
-      const res = await mockVerifyPlayerId({
-        playerId,
-        zoneId: hasZone ? zoneId : null,
-        hasZoneId: hasZone,
-      });
-      if (res.ok) {
-        setIdVerified(true);
-        toast.success(res.message);
-      } else {
-        setIdVerified(false);
-        toast.error(res.message);
-      }
-    } finally {
-      setCheckBusy(false);
-    }
-  };
+  }, [catId, prodId, validParams, region, t]);
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!idVerified) {
-      toast.info('Avval «Tekshirish» tugmasini bosing.');
-      return;
-    }
-    if (!authed && !isEmail(guestEmail.trim())) {
-      toast.error('Email to‘g‘ri kiritilmagan.');
-      return;
-    }
-    toast.success(
-      authed
-        ? `Demo: ${profileEmail} ga chek yuboriladi (keyingi bosqich).`
-        : `Demo: ${guestEmail.trim()} ga chek yuboriladi (keyingi bosqich).`
-    );
+    toast.success(t('checkout.toastSuccess', { email: receiptEmail }));
   };
 
   if (!validParams) {
     return (
-      <BrandLayout title="Xato">
+      <BrandLayout title={t('checkout.errorTitle')}>
         <div className={glassCardClass}>
-          <p className="text-slate-300">Noto‘g‘ri manzil.</p>
+          <p className="text-slate-300">{t('checkout.invalidUrl')}</p>
           <Link to="/" className={'mt-4 inline-block ' + primaryButtonClass}>
-            Bosh sahifa
+            {t('checkout.homeLink')}
           </Link>
         </div>
       </BrandLayout>
@@ -121,106 +90,71 @@ export function ProductCheckoutPage() {
 
   if (!loading && (!product || !category)) {
     return (
-      <BrandLayout title="Topilmadi">
+      <BrandLayout title={t('checkout.notFoundTitle')}>
         <div className={glassCardClass}>
-          <p className="text-slate-300">Mahsulot yoki kategoriya mavjud emas.</p>
+          <p className="text-slate-300">{t('checkout.notFoundBody')}</p>
           <Link to={`/category/${catId}`} className={'mt-4 inline-block ' + primaryButtonClass}>
-            Orqaga
+            {t('checkout.back')}
           </Link>
         </div>
       </BrandLayout>
     );
   }
 
+  if (!checkoutOk) {
+    return (
+      <BrandLayout title={t('checkout.needIdTitle')} subtitle={category?.name}>
+        <Link to={`/category/${catId}`} className={'mb-6 inline-block ' + ghostButtonClass}>
+          {t('checkout.backCategory')}
+        </Link>
+        <div className={glassCardClass}>
+          <p className="text-slate-300">
+            {guestMode ? t('checkout.needIdBodyGuest') : t('checkout.needIdBodyUser')}
+          </p>
+        </div>
+      </BrandLayout>
+    );
+  }
+
   return (
-    <BrandLayout title={product?.name ?? 'Buyurtma'} subtitle={category?.name}>
+    <BrandLayout title={product?.name ?? t('checkout.orderFallback')} subtitle={category?.name}>
       <Link to={`/category/${catId}`} className={'mb-6 inline-block ' + ghostButtonClass}>
-        ← Mahsulotlar
+        {t('checkout.backPackages')}
       </Link>
 
       {loading ? (
-        <div className={glassCardClass + ' text-slate-300'}>Yuklanmoqda...</div>
+        <div className={glassCardClass + ' text-slate-300'}>{t('checkout.loading')}</div>
       ) : (
-        <div className={glassCardClass}>
-          <div className="mb-6 flex flex-wrap items-end justify-between gap-4 border-b border-white/10 pb-6">
+        <form onSubmit={onSubmit} className={glassCardClass + ' space-y-6'}>
+          <div className="flex flex-wrap items-end justify-between gap-4 border-b border-white/10 pb-6">
             <div>
-              <div className="text-sm text-slate-400">Narxi</div>
-              <div className="text-2xl font-semibold text-emerald-200">{product!.price} so‘m</div>
+              <div className="text-sm text-slate-400">{t('checkout.price')}</div>
+              <div className="text-2xl font-semibold text-emerald-200">
+                {product!.price} {t('category.currency')}
+              </div>
             </div>
-            {idVerified && (
-              <span className="rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-100">
-                ID tekshirildi
-              </span>
-            )}
           </div>
 
-          <form onSubmit={onSubmit} className="space-y-5">
-            <div>
-              <label className={labelClass}>Player ID</label>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
-                <input
-                  value={playerId}
-                  onChange={(e) => setPlayerId(e.target.value)}
-                  className={inputClass + ' sm:flex-1'}
-                  placeholder="O‘yinchi ID"
-                  autoComplete="off"
-                />
-                <button
-                  type="button"
-                  disabled={checkBusy}
-                  onClick={onCheck}
-                  className={primaryButtonClass + ' shrink-0 sm:w-auto'}
-                >
-                  {checkBusy ? 'Tekshirilmoqda...' : 'Tekshirish'}
-                </button>
-              </div>
+          <div className="rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-sm">
+            <div className="text-slate-400">{t('checkout.player')}</div>
+            <div className="mt-1 font-medium text-white">{checkout!.playerDisplayName}</div>
+            <div className="mt-3 text-slate-400">{t('checkout.idLabel')}</div>
+            <div className="text-slate-200">
+              {checkout!.playerId}
+              {category!.hasZoneId ? ` · ${t('checkout.serverPrefix')} ${checkout!.zoneId}` : ''}
             </div>
+            <div className="mt-3 text-slate-400">{t('checkout.receiptEmail')}</div>
+            <div className="text-slate-200">{receiptEmail}</div>
+          </div>
 
-            {hasZone && (
-              <div>
-                <label className={labelClass}>Zone ID</label>
-                <input
-                  value={zoneId}
-                  onChange={(e) => setZoneId(e.target.value)}
-                  className={inputClass}
-                  placeholder="Zone ID"
-                  autoComplete="off"
-                />
-              </div>
-            )}
+          <div className="rounded-xl border border-dashed border-white/20 bg-white/5 p-4 text-sm text-slate-400">
+            {t('checkout.paymentNote')}
+          </div>
 
-            {!authed && (
-              <div>
-                <label className={labelClass}>Email (chek uchun)</label>
-                <input
-                  type="email"
-                  value={guestEmail}
-                  onChange={(e) => setGuestEmail(e.target.value)}
-                  className={inputClass}
-                  placeholder="email@example.com"
-                  autoComplete="email"
-                  required
-                />
-                <p className="mt-2 text-xs text-slate-400">To‘lov tasdiqlangach xabar shu manzilga yuboriladi.</p>
-              </div>
-            )}
-
-            {authed && (
-              <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-slate-300">
-                Siz tizimga kirgansiz. Chek <span className="font-medium text-white">{profileEmail}</span> manziliga
-                yuboriladi.
-              </div>
-            )}
-
-            <div className="rounded-xl border border-dashed border-white/20 bg-white/5 p-4 text-sm text-slate-400">
-              To‘lov (Humo / Uzcard) va buyurtma saqlash keyingi bosqichda uladi. Hozircha faqat UI oqimi.
-            </div>
-
-            <button type="submit" className={'w-full ' + primaryButtonClass}>
-              Davom etish (demo)
-            </button>
-          </form>
-        </div>
+          <button type="submit" className={'w-full ' + primaryButtonClass}>
+            {t('checkout.submitDemo')}
+          </button>
+        </form>
       )}
     </BrandLayout>
   );

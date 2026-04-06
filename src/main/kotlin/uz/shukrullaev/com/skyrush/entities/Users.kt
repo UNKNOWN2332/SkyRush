@@ -1,6 +1,7 @@
 package uz.shukrullaev.com.skyrush.entities
 
 import org.springframework.data.annotation.Id
+import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
 
 
@@ -17,5 +18,7 @@ data class Users(
     val username: String,
     val password: String,
     val email: String,
-    val role: String = "ROLE_USER"
+    val role: String = "ROLE_USER",
+    @Column("google_sub")
+    val googleSub: String? = null,
 ) : BaseEntity()

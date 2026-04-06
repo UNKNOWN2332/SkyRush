@@ -1,6 +1,7 @@
 package uz.shukrullaev.com.skyrush.repositories
 
 import kotlinx.coroutines.flow.Flow
+import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 import uz.shukrullaev.com.skyrush.entities.Category
 
@@ -12,5 +13,13 @@ import uz.shukrullaev.com.skyrush.entities.Category
  */
 
 interface CategoryRepository : CoroutineCrudRepository<Category, Long> {
-    fun findAllByStatus(status: String = "ACTIVE"): Flow<Category>
+
+
+    fun findAllByStatusAndRegion(
+        status: String,
+        region: String,
+        pageable: Pageable
+    ): Flow<Category>
+
+
 }

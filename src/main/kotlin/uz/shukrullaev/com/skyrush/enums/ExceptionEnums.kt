@@ -11,6 +11,7 @@ data class BaseMessage(val code: Int, val message: String?)
 
 enum class ExceptionsCode(val code: Int) {
     USERNAME_ALREADY_EXISTS(100),
-    EMAIL_ALREADY_EXISTS(101)
-
+    EMAIL_ALREADY_EXISTS(101),
+    GOOGLE_SIGN_IN_FAILED(102),
+    GMAIL_REQUIRED(103),
 }

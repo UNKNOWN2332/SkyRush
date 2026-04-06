@@ -26,8 +26,12 @@ class CategoryController(
      * Oddiy foydalanuvchilar uchun faqat aktiv o'yinlar ro'yxati
      */
     @GetMapping("/categories")
-    fun getActiveCategories(): Flow<CategoryResponse> {
-        return categoryService.getActiveCategories()
+    fun getCategories(
+        @RequestParam(defaultValue = "UZ") region: String,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int
+    ): Flow<CategoryResponse> {
+        return categoryService.getActiveCategories(region, page, size)
     }
 
     /**

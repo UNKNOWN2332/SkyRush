@@ -1,9 +1,9 @@
 package uz.shukrullaev.com.skyrush.DTOs
 
 import jakarta.validation.constraints.NotBlank
-import org.springframework.security.crypto.password.PasswordEncoder
 import uz.shukrullaev.com.skyrush.entities.Category
 import uz.shukrullaev.com.skyrush.entities.Product
+import uz.shukrullaev.com.skyrush.entities.PromoBanner
 import uz.shukrullaev.com.skyrush.entities.Users
 import uz.shukrullaev.com.skyrush.entities.Wallet
 import java.math.BigDecimal
@@ -24,18 +24,9 @@ data class UserResponse(
     val createdAt: Instant?
 )
 
-data class RegisterRequest(
-    val username: String,
-    val email: String,
-    val password: String
-)
-
-data class LoginRequest(
-    @field:NotBlank(message = "Username must not be empty")
-    val username: String,
-
-    @field:NotBlank(message = "Password must not be empty")
-    val password: String
+data class GoogleSignInRequest(
+    @field:NotBlank(message = "credential must not be empty")
+    val credential: String,
 )
 
 data class LoginResponse(
@@ -53,21 +44,14 @@ fun Users.toResponse(wallet: Wallet): UserResponse {
     )
 }
 
-fun RegisterRequest.toEntity(passwordEncoder: PasswordEncoder): Users {
-    return Users(
-        username = this.username,
-        email = this.email,
-        password = passwordEncoder.encode(this.password)
-    )
-}
-
 data class ProductCreateRequest(
     val categoryId: Long,
     val name: String,
     val price: BigDecimal,
     val originalPrice: BigDecimal,
     val providerProductId: String,
-    val status: String = "ACTIVE"
+    val status: String = "ACTIVE",
+    val productLogo: String
 )
 
 data class ProductUpdateRequest(
@@ -90,7 +74,24 @@ data class CategoryResponse(
     val name: String,
     val logoUrl: String,
     val hasZoneId: Boolean,
-    val status: String
+    val status: String,
+    val region: String
+)
+
+data class PromoBannerResponse(
+    val id: Long,
+    val imageUrl: String,
+    val linkUrl: String,
+    val sortOrder: Int,
+    val region: String,
+)
+
+fun PromoBanner.toResponse() = PromoBannerResponse(
+    id = this.id!!,
+    imageUrl = this.imageUrl,
+    linkUrl = this.linkUrl,
+    sortOrder = this.sortOrder,
+    region = this.region,
 )
 
 // Admin yangi o'yin qo'shishi uchun
@@ -114,7 +115,8 @@ fun Category.toResponse() = CategoryResponse(
     name = this.name,
     logoUrl = this.logoUrl,
     hasZoneId = this.hasZoneId,
-    status = this.status
+    status = this.status,
+    region = region
 )
 
 fun CategoryCreateRequest.toEntity() = Category(
@@ -141,5 +143,6 @@ fun ProductCreateRequest.toEntity() = Product(
     price = this.price,
     originalPrice = this.originalPrice,
     providerProductId = this.providerProductId,
-    status = this.status
+    status = this.status,
+    productLogo = this.productLogo
 )

@@ -2,6 +2,8 @@ package uz.shukrullaev.com.skyrush.services
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import uz.shukrullaev.com.skyrush.DTOs.*
 import uz.shukrullaev.com.skyrush.repositories.ProductRepository
@@ -17,8 +19,14 @@ import uz.shukrullaev.com.skyrush.repositories.ProductRepository
 class ProductService(
     private val productRepository: ProductRepository
 ) {
-    fun getActiveProductsByCategoryId(categoryId: Long): Flow<ProductResponse> {
-        return productRepository.findAllByCategoryIdAndStatus(categoryId, "ACTIVE")
+
+    fun getActiveProductsByCategoryId(
+        categoryId: Long,
+        page: Int = 0,
+        size: Int = 10
+    ): Flow<ProductResponse> {
+        val pageable = PageRequest.of(page, size, Sort.by("id").descending())
+        return productRepository.findAllByCategoryIdAndStatusOrderByIdDesc(categoryId, "ACTIVE", pageable)
             .map { it.toResponse() }
     }
 

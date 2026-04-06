@@ -22,5 +22,7 @@ data class Category(
     @Column("has_zone_id")
     val hasZoneId: Boolean = false,
 
-    val status: String = "ACTIVE"
+    val status: String = "ACTIVE",
+
+    val region: String = "UZ"
 )

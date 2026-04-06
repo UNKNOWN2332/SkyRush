@@ -2,17 +2,6 @@ import axios from 'axios';
 
 const USER_STORAGE_KEY = 'skyrush_user';
 
-export type LoginRequest = {
-  username: string;
-  password: string;
-};
-
-export type RegisterRequest = {
-  username: string;
-  email: string;
-  password: string;
-};
-
 export type BaseMessage = {
   code: number;
   message: string | null;
@@ -55,34 +44,27 @@ export function logout(): void {
 }
 
 const toBaseMessage = (error: unknown): BaseMessage => {
-  const data = (error as any)?.response?.data ?? (error as any);
-  if (data && typeof data.code === 'number') {
+  const data = (error as { response?: { data?: unknown } })?.response?.data ?? error;
+  const d = data as { code?: number; message?: string };
+  if (d && typeof d.code === 'number') {
     return {
-      code: data.code,
-      message: typeof data.message === 'string' ? data.message : null,
+      code: d.code,
+      message: typeof d.message === 'string' ? d.message : null,
     };
   }
   return { code: -1, message: "Noma'lum xatolik" };
 };
 
 export const authService = {
-  login: async (loginData: LoginRequest): Promise<LoginResponse> => {
+  googleSignIn: async (credential: string): Promise<LoginResponse> => {
     try {
-      const response = await api.post<LoginResponse>('/auth/login', loginData);
+      const response = await api.post<LoginResponse>('/auth/google', { credential });
       if (response.data?.token) {
         localStorage.setItem('token', response.data.token);
       }
       if (response.data?.user) {
         localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.data.user));
       }
-      return response.data;
-    } catch (error) {
-      throw toBaseMessage(error);
-    }
-  },
-  register: async (registerData: RegisterRequest): Promise<UserResponse> => {
-    try {
-      const response = await api.post<UserResponse>('/auth/register', registerData);
       return response.data;
     } catch (error) {
       throw toBaseMessage(error);

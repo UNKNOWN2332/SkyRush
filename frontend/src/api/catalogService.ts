@@ -1,4 +1,5 @@
-import axios from 'axios';
+import type { ShopRegion } from '../lib/region';
+import { v1Client } from './client';
 
 export type CategoryDto = {
   id: number;
@@ -6,6 +7,7 @@ export type CategoryDto = {
   logoUrl: string;
   hasZoneId: boolean;
   status: string;
+  region?: string;
 };
 
 export type ProductDto = {
@@ -16,17 +18,17 @@ export type ProductDto = {
   status: string;
 };
 
-const v1 = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api'}/v1`,
-});
-
 export const catalogService = {
-  getActiveCategories: async (): Promise<CategoryDto[]> => {
-    const { data } = await v1.get<CategoryDto[]>('/categories');
+  getActiveCategories: async (region: ShopRegion, page = 0, size = 10): Promise<CategoryDto[]> => {
+    const { data } = await v1Client.get<CategoryDto[]>('/categories', {
+      params: { region, page, size },
+    });
     return Array.isArray(data) ? data : [];
   },
-  getProductsByCategory: async (categoryId: number): Promise<ProductDto[]> => {
-    const { data } = await v1.get<ProductDto[]>(`/products/category/${categoryId}`);
+  getProductsByCategory: async (categoryId: number, page = 0, size = 10): Promise<ProductDto[]> => {
+    const { data } = await v1Client.get<ProductDto[]>(`/products/category/${categoryId}`, {
+      params: { page, size },
+    });
     return Array.isArray(data) ? data : [];
   },
 };

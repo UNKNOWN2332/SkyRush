@@ -2,6 +2,8 @@ package uz.shukrullaev.com.skyrush.services
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import uz.shukrullaev.com.skyrush.DTOs.*
 import uz.shukrullaev.com.skyrush.repositories.CategoryRepository
@@ -16,8 +18,14 @@ import uz.shukrullaev.com.skyrush.repositories.CategoryRepository
 class CategoryService(
     private val categoryRepository: CategoryRepository
 ) {
-    fun getActiveCategories(): Flow<CategoryResponse> {
-        return categoryRepository.findAllByStatus("ACTIVE")
+    fun getActiveCategories(
+        region: String,
+        page: Int = 0,
+        size: Int = 10
+    ): Flow<CategoryResponse> {
+        val pageable = PageRequest.of(page, size, Sort.by("id").descending())
+
+        return categoryRepository.findAllByStatusAndRegion("ACTIVE", region, pageable)
             .map { it.toResponse() }
     }
 

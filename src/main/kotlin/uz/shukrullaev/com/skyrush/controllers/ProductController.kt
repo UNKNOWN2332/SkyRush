@@ -22,8 +22,12 @@ class ProductController(
 
 
     @GetMapping("/products/category/{categoryId}")
-    fun getProductsByCategory(@PathVariable categoryId: Long): Flow<ProductResponse> {
-        return productService.getActiveProductsByCategoryId(categoryId)
+    fun getProductsByCategory(
+        @PathVariable categoryId: Long,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int
+    ): Flow<ProductResponse> {
+        return productService.getActiveProductsByCategoryId(categoryId, page, size)
     }
 
 

@@ -41,3 +41,11 @@ class ObjectIdNotFoundException(private val userId: Long) : SkyRushException() {
     override fun errorType() = ExceptionsCode.EMAIL_ALREADY_EXISTS
     override fun getErrorMessageArguments(): Array<Any?> = arrayOf(userId)
 }
+
+class GoogleSignInFailedException : SkyRushException() {
+    override fun errorType() = ExceptionsCode.GOOGLE_SIGN_IN_FAILED
+}
+
+class GmailRequiredException : SkyRushException() {
+    override fun errorType() = ExceptionsCode.GMAIL_REQUIRED
+}

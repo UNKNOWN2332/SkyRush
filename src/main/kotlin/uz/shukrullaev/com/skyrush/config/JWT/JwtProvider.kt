@@ -1,9 +1,8 @@
-package uz.shukrullaev.com.skyrush.config.JWT;
-
+package uz.shukrullaev.com.skyrush.config.JWT
 import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import io.jsonwebtoken.security.Keys
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 import uz.shukrullaev.com.skyrush.entities.Users
 import java.util.*
 
@@ -31,5 +30,20 @@ class JwtProvider(
                 .setExpiration(expiryDate)
                 .signWith(key)
                 .compact()
+    }
+
+    fun validateToken(token: String): JwtPrincipal? {
+        return try {
+            val claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .body
+            val subject = claims.subject ?: return null
+            val role = claims["role"] as? String ?: "ROLE_USER"
+            JwtPrincipal(subject, role)
+        } catch (_: Exception) {
+            null
+        }
     }
 }

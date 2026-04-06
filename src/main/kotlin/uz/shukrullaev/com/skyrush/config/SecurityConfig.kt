@@ -32,10 +32,11 @@ class SecurityConfig {
                 exchange
                     .pathMatchers("/api/auth/**").permitAll()
                     .pathMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/categories/**").permitAll()
+                    .pathMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/banners").permitAll()
                     .pathMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/products/category/**").permitAll()
 
                     .pathMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                    .pathMatchers("https://ibb.co/Q316c7SP").permitAll()
+
                     .anyExchange().authenticated()
             }
             .httpBasic { it.disable() }
