@@ -80,6 +80,20 @@ CREATE TABLE IF NOT EXISTS promo_banners
 
 CREATE INDEX IF NOT EXISTS idx_promo_banners_status_region ON promo_banners (status, region);
 
+CREATE TABLE IF NOT EXISTS shop_reviews
+(
+    id               BIGSERIAL PRIMARY KEY,
+    user_id          INTEGER     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    author_username  VARCHAR(50) NOT NULL,
+    category_id      INTEGER REFERENCES categories (id) ON DELETE SET NULL,
+    product_id       BIGINT REFERENCES products (id) ON DELETE SET NULL,
+    rating           SMALLINT    NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    body             TEXT        NOT NULL,
+    created_at       TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_shop_reviews_created ON shop_reviews (created_at DESC);
+
 INSERT INTO promo_banners (image_url, link_url, sort_order, status, region)
 SELECT v.image_url, v.link_url, v.sort_order, v.status, v.region
 FROM (VALUES
@@ -88,3 +102,87 @@ FROM (VALUES
           ('https://picsum.photos/seed/skyrush_c/1400/480', 'https://example.com', 2, 'ACTIVE', 'UZ')
      ) AS v(image_url, link_url, sort_order, status, region)
 WHERE NOT EXISTS (SELECT 1 FROM promo_banners LIMIT 1);
+
+CREATE TABLE IF NOT EXISTS tournaments
+(
+    id              BIGSERIAL PRIMARY KEY,
+    organizer_id    INTEGER     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    title           VARCHAR(200) NOT NULL,
+    description     TEXT,
+    status          VARCHAR(32) NOT NULL DEFAULT 'REGISTRATION_OPEN',
+    max_teams       INTEGER     NOT NULL,
+    best_of         SMALLINT    NOT NULL,
+    roster_size     INTEGER     NOT NULL DEFAULT 5 CHECK (roster_size >= 1 AND roster_size <= 20),
+    game_code       VARCHAR(32) NOT NULL DEFAULT 'ML',
+    phased_format     BOOLEAN     NOT NULL DEFAULT FALSE,
+    has_custom_stages BOOLEAN     NOT NULL DEFAULT FALSE,
+    created_at        TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT tournaments_max_teams_check CHECK (max_teams >= 2 AND max_teams <= 1024),
+    CONSTRAINT tournaments_best_of_check CHECK (best_of IN (1, 2, 3, 5, 7, 9))
+);
+
+CREATE INDEX IF NOT EXISTS idx_tournaments_created ON tournaments (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_tournaments_status ON tournaments (status);
+
+CREATE TABLE IF NOT EXISTS tournament_format_rules
+(
+    id             BIGSERIAL PRIMARY KEY,
+    tournament_id  BIGINT      NOT NULL REFERENCES tournaments (id) ON DELETE CASCADE,
+    min_teams      INTEGER     NOT NULL CHECK (min_teams >= 1),
+    best_of        SMALLINT    NOT NULL CHECK (best_of IN (1, 2, 3, 5, 7, 9)),
+    UNIQUE (tournament_id, min_teams)
+);
+
+CREATE INDEX IF NOT EXISTS idx_tournament_format_rules_tournament ON tournament_format_rules (tournament_id);
+
+CREATE TABLE IF NOT EXISTS tournament_stages
+(
+    id                  BIGSERIAL PRIMARY KEY,
+    tournament_id       BIGINT      NOT NULL REFERENCES tournaments (id) ON DELETE CASCADE,
+    sort_order          INTEGER     NOT NULL CHECK (sort_order >= 1),
+    bracket_track       VARCHAR(24) NOT NULL DEFAULT 'MAIN',
+    phase_kind          VARCHAR(40) NOT NULL,
+    label               VARCHAR(160) NOT NULL DEFAULT '',
+    best_of             SMALLINT    NOT NULL CHECK (best_of IN (1, 2, 3, 5, 7, 9)),
+    teams_at_start      INTEGER     NOT NULL CHECK (teams_at_start >= 2),
+    group_count         INTEGER     CHECK (group_count IS NULL OR group_count >= 1),
+    teams_per_group     INTEGER     CHECK (teams_per_group IS NULL OR teams_per_group >= 2),
+    advance_per_group   INTEGER     CHECK (advance_per_group IS NULL OR advance_per_group >= 1),
+    UNIQUE (tournament_id, sort_order, bracket_track)
+);
+
+CREATE INDEX IF NOT EXISTS idx_tournament_stages_tournament ON tournament_stages (tournament_id);
+
+-- Eski jadval (128 / faqat toq BO): Spring schema.sql ni ; bo‘yicha bo‘laklaydi — DO $$...$$ ishonchsiz.
+-- Har ishga tushirishda DROP + ADD: constraint yo‘q bo‘lsa ADD, bor bo‘lsa DROP dan keyin qayta yaratiladi.
+ALTER TABLE tournaments DROP CONSTRAINT IF EXISTS tournaments_max_teams_check;
+ALTER TABLE tournaments ADD CONSTRAINT tournaments_max_teams_check CHECK (max_teams >= 2 AND max_teams <= 1024);
+ALTER TABLE tournaments DROP CONSTRAINT IF EXISTS tournaments_best_of_check;
+ALTER TABLE tournaments ADD CONSTRAINT tournaments_best_of_check CHECK (best_of IN (1, 2, 3, 5, 7, 9));
+ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS phased_format BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS has_custom_stages BOOLEAN NOT NULL DEFAULT FALSE;
+
+CREATE TABLE IF NOT EXISTS tournament_teams
+(
+    id               BIGSERIAL PRIMARY KEY,
+    tournament_id    BIGINT      NOT NULL REFERENCES tournaments (id) ON DELETE CASCADE,
+    team_name        VARCHAR(120) NOT NULL,
+    captain_user_id  INTEGER     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    logo_url         TEXT,
+    created_at       TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (tournament_id, team_name)
+);
+
+CREATE INDEX IF NOT EXISTS idx_tournament_teams_tournament ON tournament_teams (tournament_id);
+
+CREATE TABLE IF NOT EXISTS tournament_team_members
+(
+    id              BIGSERIAL PRIMARY KEY,
+    team_id         BIGINT      NOT NULL REFERENCES tournament_teams (id) ON DELETE CASCADE,
+    nickname        VARCHAR(100) NOT NULL,
+    game_player_id  VARCHAR(64) NOT NULL,
+    is_captain      BOOLEAN     NOT NULL DEFAULT FALSE,
+    UNIQUE (team_id, game_player_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_tournament_members_team ON tournament_team_members (team_id);

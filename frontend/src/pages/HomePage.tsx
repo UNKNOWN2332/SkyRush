@@ -99,37 +99,48 @@ export function HomePage() {
         </div>
       }
       title={t('home.title')}
-      subtitle={t('home.subtitle')}
     >
       <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-10">
         {loading ? (
-          <div className={glassCardClass + ' w-full text-center text-slate-300'}>{t('home.loading')}</div>
+          <div className={glassCardClass + ' w-full text-center text-slate-600 dark:text-slate-300'}>
+            {t('home.loading')}
+          </div>
         ) : categories.length === 0 ? (
-          <div className={glassCardClass + ' w-full text-center text-slate-300'}>{t('home.emptyRegion')}</div>
+          <div className={glassCardClass + ' w-full text-center text-slate-600 dark:text-slate-300'}>
+            {t('home.emptyRegion')}
+          </div>
         ) : (
           <>
-            <div className="flex w-full flex-wrap justify-center gap-4">
+            <div className="grid w-full grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-5 sm:gap-y-10 md:grid-cols-3 lg:grid-cols-4">
               {categories.map((c) => (
                 <Link
                   key={c.id}
                   to={`/category/${c.id}`}
-                  className={`${glassCardClass} block w-full max-w-[340px] p-4 transition hover:border-emerald-300/40 hover:shadow-[0_20px_70px_-25px_rgba(16,185,129,0.35)] sm:p-5`}
+                  className="group block w-full outline-none ring-offset-2 ring-offset-slate-100 focus-visible:ring-2 focus-visible:ring-emerald-400/50 dark:ring-offset-[#060915]"
                 >
-                  <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:items-center sm:text-left">
-                    <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-black/30 sm:h-16 sm:w-16">
-                      {c.logoUrl ? (
-                        <img src={c.logoUrl} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-lg font-bold text-emerald-200">
-                          {c.name.slice(0, 1)}
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="line-clamp-2 text-sm font-semibold text-white sm:text-base">{c.name}</div>
-                      <div className="mt-1 text-xs text-slate-400">
-                        {c.hasZoneId ? t('home.zoneId') : t('home.playerId')}
+                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-3xl bg-gradient-to-br from-white via-slate-100 to-slate-200/90 shadow-lg shadow-slate-300/50 transition duration-300 ease-out group-hover:-translate-y-1 group-hover:shadow-xl dark:from-slate-800/30 dark:via-[#0a0f1a] dark:to-black/80 dark:shadow-[0_24px_48px_-20px_rgba(0,0,0,0.85)] dark:group-hover:shadow-[0_36px_70px_-28px_rgba(0,0,0,0.95)]">
+                    {c.logoUrl ? (
+                      <img
+                        src={c.logoUrl}
+                        alt=""
+                        className="h-full w-full object-contain p-4 transition duration-500 ease-out group-hover:scale-[1.05] sm:p-5 md:p-6"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center p-6 text-5xl font-black text-emerald-600/90 sm:text-6xl dark:text-emerald-300/80">
+                        {c.name.slice(0, 1)}
                       </div>
+                    )}
+                    <div
+                      className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-slate-900/25 to-transparent opacity-80 dark:from-black/50 dark:opacity-70"
+                      aria-hidden
+                    />
+                  </div>
+                  <div className="mt-3 space-y-0.5 px-1 text-center sm:mt-3.5">
+                    <div className="line-clamp-2 text-sm font-bold leading-snug text-slate-900 sm:text-[0.95rem] dark:text-white">
+                      {c.name}
+                    </div>
+                    <div className="text-[11px] text-slate-500 sm:text-xs dark:text-slate-500">
+                      {c.hasZoneId ? t('home.zoneId') : t('home.playerId')}
                     </div>
                   </div>
                 </Link>
@@ -144,10 +155,10 @@ export function HomePage() {
                   disabled={loadingMore}
                   className={
                     ghostButtonClass +
-                    ' flex items-center gap-2 border-violet-500/30 py-3 pl-5 pr-6 text-slate-200 hover:border-violet-400/50 hover:bg-violet-500/10'
+                    ' flex items-center gap-2 border-violet-300 py-3 pl-5 pr-6 hover:border-violet-400 hover:bg-violet-50 dark:border-violet-500/30 dark:text-slate-200 dark:hover:border-violet-400/50 dark:hover:bg-violet-500/10'
                   }
                 >
-                  <DoubleChevronDown className="text-violet-300" />
+                  <DoubleChevronDown className="text-violet-600 dark:text-violet-300" />
                   {loadingMore ? t('home.loadingMore') : t('home.loadMore')}
                 </button>
               </div>

@@ -127,7 +127,7 @@ export function CategoryPage() {
     return (
       <BrandLayout title={t('category.errorTitle')}>
         <div className={glassCardClass}>
-          <p className="text-slate-300">{t('category.invalidCategory')}</p>
+          <p className="text-slate-600 dark:text-slate-300">{t('category.invalidCategory')}</p>
           <Link to="/" className={'mt-4 inline-block ' + primaryButtonClass}>
             {t('category.homeLink')}
           </Link>
@@ -146,13 +146,13 @@ export function CategoryPage() {
       </Link>
 
       {loading ? (
-        <div className={glassCardClass + ' text-slate-300'}>{t('category.loading')}</div>
+        <div className={glassCardClass + ' text-slate-600 dark:text-slate-300'}>{t('category.loading')}</div>
       ) : !category ? (
-        <div className={glassCardClass + ' text-slate-300'}>{t('category.notInRegion')}</div>
+        <div className={glassCardClass + ' text-slate-600 dark:text-slate-300'}>{t('category.notInRegion')}</div>
       ) : (
         <div className="space-y-10">
           <section>
-            <h2 className="mb-4 text-lg font-semibold text-white">{t('category.playerSection')}</h2>
+            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-white">{t('category.playerSection')}</h2>
             <CategoryPlayerPanel
               key={`${id}-${region}`}
               hasZoneId={category.hasZoneId}
@@ -163,9 +163,9 @@ export function CategoryPage() {
           </section>
 
           <section>
-            <h2 className="mb-4 text-lg font-semibold text-white">{t('category.packagesSection')}</h2>
+            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-white">{t('category.packagesSection')}</h2>
             {products.length === 0 ? (
-              <div className={glassCardClass + ' text-slate-300'}>{t('category.noProducts')}</div>
+              <div className={glassCardClass + ' text-slate-600 dark:text-slate-300'}>{t('category.noProducts')}</div>
             ) : (
               <>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -181,12 +181,12 @@ export function CategoryPage() {
                     >
                       <div className="flex min-h-[100px] flex-col justify-between gap-2">
                         <div className="min-w-0">
-                          <div className="line-clamp-2 text-sm font-semibold text-white">{p.name}</div>
-                          <div className="mt-2 text-xs text-emerald-200/90 sm:text-sm">
+                          <div className="line-clamp-2 text-sm font-semibold text-slate-900 dark:text-white">{p.name}</div>
+                          <div className="mt-2 text-xs text-emerald-700 sm:text-sm dark:text-emerald-200/90">
                             {p.price} {t('category.currency')}
                           </div>
                         </div>
-                        <span className="inline-flex w-fit rounded-md bg-gradient-to-r from-emerald-400/30 to-cyan-400/30 px-2 py-1 text-[10px] font-medium text-emerald-100 sm:text-xs">
+                        <span className="inline-flex w-fit rounded-md bg-gradient-to-r from-emerald-200/90 to-cyan-200/80 px-2 py-1 text-[10px] font-medium text-emerald-900 dark:from-emerald-400/30 dark:to-cyan-400/30 dark:text-emerald-100 sm:text-xs">
                           {t('category.select')}
                         </span>
                       </div>
@@ -201,10 +201,10 @@ export function CategoryPage() {
                       disabled={loadingMore}
                       className={
                         ghostButtonClass +
-                        ' flex items-center gap-2 border-violet-500/30 py-3 pl-5 pr-6 hover:border-violet-400/50 hover:bg-violet-500/10'
+                        ' flex items-center gap-2 border-violet-300 py-3 pl-5 pr-6 hover:border-violet-400 hover:bg-violet-50 dark:border-violet-500/30 dark:hover:border-violet-400/50 dark:hover:bg-violet-500/10'
                       }
                     >
-                      <DoubleChevronDown className="text-violet-300" />
+                      <DoubleChevronDown className="text-violet-600 dark:text-violet-300" />
                       {loadingMore ? t('category.loadingMore') : t('category.loadMore')}
                     </button>
                   </div>

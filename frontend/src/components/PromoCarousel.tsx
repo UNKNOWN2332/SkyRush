@@ -65,12 +65,12 @@ export function PromoCarousel({ slides }: PromoCarouselProps) {
           <button
             type="button"
             onClick={prev}
-            className="group relative min-h-[168px] overflow-hidden rounded-2xl border border-white/10 bg-black/40 opacity-80 ring-1 ring-white/5 transition hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
+            className="group relative min-h-[168px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100/90 opacity-90 ring-1 ring-slate-200/80 transition hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 dark:border-white/10 dark:bg-black/40 dark:opacity-80 dark:ring-white/5"
             aria-label={t('promo.prevBanner')}
           >
             <img src={prevSlide.imageUrl} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
-            <span className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent" />
-            <span className="absolute left-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-lg text-white backdrop-blur-sm">
+            <span className="absolute inset-0 bg-gradient-to-r from-slate-900/40 to-transparent dark:from-black/50" />
+            <span className="absolute left-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200/80 bg-white/95 text-lg text-slate-800 shadow backdrop-blur-sm dark:border-transparent dark:bg-black/55 dark:text-white">
               ‹
             </span>
           </button>
@@ -80,13 +80,13 @@ export function PromoCarousel({ slides }: PromoCarouselProps) {
               href={current.linkUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="relative block min-h-[200px] overflow-hidden rounded-2xl border border-white/15 bg-black/30 shadow-[0_24px_80px_-30px_rgba(16,185,129,0.35)] ring-1 ring-white/10 transition hover:border-emerald-400/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
+              className="relative block min-h-[200px] overflow-hidden rounded-2xl border border-slate-200 bg-white/80 shadow-lg shadow-slate-300/40 ring-1 ring-slate-200/80 transition hover:border-emerald-400/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 dark:border-white/15 dark:bg-black/30 dark:shadow-[0_24px_80px_-30px_rgba(16,185,129,0.35)] dark:ring-white/10 dark:hover:border-emerald-400/30"
             >
               {mainVisual}
-              <span className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent" />
+              <span className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-900/50 to-transparent dark:from-black/70" />
             </a>
           ) : (
-            <div className="relative block min-h-[200px] overflow-hidden rounded-2xl border border-white/15 bg-black/30 ring-1 ring-white/10">
+            <div className="relative block min-h-[200px] overflow-hidden rounded-2xl border border-slate-200 bg-white/80 ring-1 ring-slate-200/80 dark:border-white/15 dark:bg-black/30 dark:ring-white/10">
               {mainVisual}
             </div>
           )}
@@ -94,12 +94,12 @@ export function PromoCarousel({ slides }: PromoCarouselProps) {
           <button
             type="button"
             onClick={next}
-            className="group relative min-h-[168px] overflow-hidden rounded-2xl border border-white/10 bg-black/40 opacity-80 ring-1 ring-white/5 transition hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
+            className="group relative min-h-[168px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100/90 opacity-90 ring-1 ring-slate-200/80 transition hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 dark:border-white/10 dark:bg-black/40 dark:opacity-80 dark:ring-white/5"
             aria-label={t('promo.nextBanner')}
           >
             <img src={nextSlide.imageUrl} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
-            <span className="absolute inset-0 bg-gradient-to-l from-black/50 to-transparent" />
-            <span className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-lg text-white backdrop-blur-sm">
+            <span className="absolute inset-0 bg-gradient-to-l from-slate-900/40 to-transparent dark:from-black/50" />
+            <span className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200/80 bg-white/95 text-lg text-slate-800 shadow backdrop-blur-sm dark:border-transparent dark:bg-black/55 dark:text-white">
               ›
             </span>
           </button>
@@ -112,12 +112,12 @@ export function PromoCarousel({ slides }: PromoCarouselProps) {
               href={current.linkUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="relative block aspect-[2.15/1] max-h-[220px] w-full overflow-hidden rounded-2xl border border-white/15 bg-black/30"
+              className="relative block aspect-[2.15/1] max-h-[220px] w-full overflow-hidden rounded-2xl border border-slate-200 bg-white/80 dark:border-white/15 dark:bg-black/30"
             >
               <img src={current.imageUrl} alt={t('promo.bannerAlt')} className="h-full w-full object-cover" />
             </a>
           ) : (
-            <div className="relative block aspect-[2.15/1] max-h-[220px] w-full overflow-hidden rounded-2xl border border-white/15 bg-black/30">
+            <div className="relative block aspect-[2.15/1] max-h-[220px] w-full overflow-hidden rounded-2xl border border-slate-200 bg-white/80 dark:border-white/15 dark:bg-black/30">
               <img src={current.imageUrl} alt={t('promo.bannerAlt')} className="h-full w-full object-cover" />
             </div>
           )}
@@ -126,7 +126,7 @@ export function PromoCarousel({ slides }: PromoCarouselProps) {
               <button
                 type="button"
                 onClick={prev}
-                className="absolute left-2 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/50 text-xl text-white backdrop-blur-md"
+                className="absolute left-2 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-800 shadow backdrop-blur-md dark:border-white/20 dark:bg-black/50 dark:text-white"
                 aria-label={t('promo.prev')}
               >
                 ‹
@@ -134,7 +134,7 @@ export function PromoCarousel({ slides }: PromoCarouselProps) {
               <button
                 type="button"
                 onClick={next}
-                className="absolute right-2 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/50 text-xl text-white backdrop-blur-md"
+                className="absolute right-2 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-800 shadow backdrop-blur-md dark:border-white/20 dark:bg-black/50 dark:text-white"
                 aria-label={t('promo.next')}
               >
                 ›
@@ -153,8 +153,8 @@ export function PromoCarousel({ slides }: PromoCarouselProps) {
                 onClick={() => setIndex(i)}
                 className={
                   i === index
-                    ? 'h-1 w-10 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.45)] transition'
-                    : 'h-1 w-8 rounded-full bg-white/25 transition hover:bg-white/40'
+                    ? 'h-1 w-10 rounded-full bg-slate-800 shadow-md transition dark:bg-white dark:shadow-[0_0_12px_rgba(255,255,255,0.45)]'
+                    : 'h-1 w-8 rounded-full bg-slate-300 transition hover:bg-slate-400 dark:bg-white/25 dark:hover:bg-white/40'
                 }
                 aria-label={t('promo.slide', { n: i + 1 })}
               />

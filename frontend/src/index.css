@@ -7,3 +7,11 @@ body,
 #root {
   height: 100%;
 }
+
+html {
+  @apply bg-slate-100 antialiased;
+}
+
+html.dark {
+  @apply bg-[#060915];
+}

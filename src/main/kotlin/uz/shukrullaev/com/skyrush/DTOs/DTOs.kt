@@ -1,9 +1,13 @@
 package uz.shukrullaev.com.skyrush.DTOs
 
+import jakarta.validation.constraints.Max
+import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 import uz.shukrullaev.com.skyrush.entities.Category
 import uz.shukrullaev.com.skyrush.entities.Product
 import uz.shukrullaev.com.skyrush.entities.PromoBanner
+import uz.shukrullaev.com.skyrush.entities.ShopReview
 import uz.shukrullaev.com.skyrush.entities.Users
 import uz.shukrullaev.com.skyrush.entities.Wallet
 import java.math.BigDecimal
@@ -137,6 +141,37 @@ fun Product.toResponse() = ProductResponse(
 )
 
 // CreateRequest -> Entity (Admin uchun)
+data class ReviewCreateRequest(
+    @field:Min(1)
+    @field:Max(5)
+    val rating: Int,
+    @field:NotBlank
+    @field:Size(max = 2000)
+    val body: String,
+    val categoryId: Long? = null,
+    val productId: Long? = null,
+)
+
+data class ReviewResponse(
+    val id: Long,
+    val authorUsername: String,
+    val rating: Int,
+    val body: String,
+    val categoryId: Long?,
+    val productId: Long?,
+    val createdAt: Instant?,
+)
+
+fun ShopReview.toResponse() = ReviewResponse(
+    id = this.id!!,
+    authorUsername = this.authorUsername,
+    rating = this.rating,
+    body = this.body,
+    categoryId = this.categoryId,
+    productId = this.productId,
+    createdAt = this.createdAt,
+)
+
 fun ProductCreateRequest.toEntity() = Product(
     categoryId = this.categoryId,
     name = this.name,

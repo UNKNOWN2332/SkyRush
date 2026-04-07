@@ -38,28 +38,36 @@ class AuthService(
         if (payload.emailVerified != true) {
             throw GoogleSignInFailedException()
         }
+
         val email = emailRaw.lowercase()
         if (!isGmailDomain(email)) {
             throw GmailRequiredException()
         }
-
+        val fullName = payload["name"] as? String ?: "User"
         val sub = payload.subject ?: throw GoogleSignInFailedException()
-        val username = "g$sub".take(50)
 
         var user = userRepository.findByEmail(email)
+
         if (user == null) {
             val encoded = passwordEncoder.encode("{google_oauth}${UUID.randomUUID()}")
             user = userRepository.save(
                 Users(
-                    username = username,
+                    username = fullName,
                     password = encoded,
                     email = email,
                     googleSub = sub,
                 ),
             )
             walletRepository.save(Wallet(userId = user.id!!, goldCoins = 0))
-        } else if (user.googleSub != sub) {
-            user = userRepository.save(user.copy(googleSub = sub))
+        } else {
+            if (user.username != fullName || user.googleSub != sub) {
+                user = userRepository.save(
+                    user.copy(
+                        username = fullName,
+                        googleSub = sub
+                    )
+                )
+            }
         }
 
         val wallet = walletRepository.findByUserId(user.id!!)
@@ -68,7 +76,6 @@ class AuthService(
         val token = jwtProvider.generateToken(user)
         return LoginResponse(token = token, user = user.toResponse(wallet))
     }
-
     private fun isGmailDomain(email: String): Boolean {
         return email.endsWith("@gmail.com") || email.endsWith("@googlemail.com")
     }

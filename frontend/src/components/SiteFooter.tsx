@@ -6,10 +6,10 @@ const SHARE_CHANNEL_URL = 'https://t.me/kenzo_sellerr';
 const INSTAGRAM_URL = 'https://www.instagram.com/kenzogamer.uz/';
 
 const footerBtnClass =
-  'inline-flex items-center gap-2.5 rounded-xl bg-[#2f3555] px-4 py-3 text-sm font-medium text-white shadow-sm ring-1 ring-white/5 transition hover:bg-[#3a4168] hover:brightness-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50';
+  'inline-flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50 dark:border-transparent dark:bg-[#2f3555] dark:text-white dark:shadow-none dark:ring-1 dark:ring-white/5 dark:hover:bg-[#3a4168] dark:hover:brightness-105';
 
 const iconTileClass =
-  'flex h-11 w-11 items-center justify-center rounded-lg bg-[#2f3555] text-white ring-1 ring-white/10 transition hover:bg-[#3a4168] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50';
+  'flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-800 shadow-sm transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50 dark:border-transparent dark:bg-[#2f3555] dark:text-white dark:shadow-none dark:ring-1 dark:ring-white/10 dark:hover:bg-[#3a4168]';
 
 function IconTelegram({ className }: { className?: string }) {
   return (
@@ -69,12 +69,12 @@ export function SiteFooter() {
   };
 
   return (
-    <footer className="relative z-0 mt-auto border-t border-white/10 bg-[#070a12] text-slate-200">
+    <footer className="relative z-0 mt-auto border-t border-slate-200/90 bg-slate-50 text-slate-700 dark:border-white/10 dark:bg-[#070a12] dark:text-slate-200">
       <div className="mx-auto max-w-6xl px-6 py-10">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-sm font-medium text-white">{t('footer.stayUpdated')}</p>
-            <p className="mt-1 max-w-xs text-xs text-slate-500">{t('footer.stayHint')}</p>
+            <p className="text-sm font-medium text-slate-900 dark:text-white">{t('footer.stayUpdated')}</p>
+            <p className="mt-1 max-w-xs text-xs text-slate-500 dark:text-slate-500">{t('footer.stayHint')}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               <a
                 href={SHARE_CHANNEL_URL}
@@ -107,7 +107,7 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="my-8 h-px w-full bg-white/10" />
+        <div className="my-8 h-px w-full bg-slate-200 dark:bg-white/10" />
 
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-2">
@@ -145,17 +145,19 @@ export function SiteFooter() {
 
           <div className="text-left text-xs text-slate-500 sm:text-right">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:justify-end">
-              <span className="cursor-default hover:text-slate-400">{t('footer.cookie')}</span>
-              <span className="hidden text-slate-600 sm:inline" aria-hidden>
+              <span className="cursor-default hover:text-slate-700 dark:hover:text-slate-400">{t('footer.cookie')}</span>
+              <span className="hidden text-slate-400 sm:inline dark:text-slate-600" aria-hidden>
                 |
               </span>
-              <span className="cursor-default hover:text-slate-400">{t('footer.privacy')}</span>
-              <span className="hidden text-slate-600 sm:inline" aria-hidden>
+              <span className="cursor-default hover:text-slate-700 dark:hover:text-slate-400">{t('footer.privacy')}</span>
+              <span className="hidden text-slate-400 sm:inline dark:text-slate-600" aria-hidden>
                 |
               </span>
-              <span className="cursor-default hover:text-slate-400">{t('footer.terms')}</span>
+              <span className="cursor-default hover:text-slate-700 dark:hover:text-slate-400">{t('footer.terms')}</span>
             </div>
-            <p className="mt-2 text-slate-600">{t('footer.copyright', { year: new Date().getFullYear() })}</p>
+            <p className="mt-2 text-slate-500 dark:text-slate-600">
+              {t('footer.copyright', { year: new Date().getFullYear() })}
+            </p>
           </div>
         </div>
       </div>

@@ -6,12 +6,13 @@ import type { CategoryCheckoutState } from '../types/categoryCheckout';
 const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
 const panelClass =
-  'rounded-xl border border-violet-500/45 bg-[#16162a] p-5 shadow-[0_0_28px_rgba(123,97,255,0.18)] sm:p-6';
+  'rounded-xl border border-violet-200 bg-violet-50/60 p-5 shadow-md shadow-violet-200/30 sm:p-6 dark:border-violet-500/45 dark:bg-[#16162a] dark:shadow-[0_0_28px_rgba(123,97,255,0.18)]';
 
-const fieldLabelClass = 'mb-1.5 block text-xs font-medium tracking-wide text-violet-300/95';
+const fieldLabelClass =
+  'mb-1.5 block text-xs font-medium tracking-wide text-violet-900 dark:text-violet-300/95';
 
 const fieldInputClass =
-  'h-12 w-full rounded-lg border border-violet-500/35 bg-[#0d0d18] px-3.5 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-violet-400/70 focus:ring-2 focus:ring-violet-500/25';
+  'h-12 w-full rounded-lg border border-violet-300 bg-white px-3.5 text-sm text-slate-900 placeholder:text-slate-500 outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-400/20 dark:border-violet-500/35 dark:bg-[#0d0d18] dark:text-white dark:focus:border-violet-400/70 dark:focus:ring-violet-500/25';
 
 type CategoryPlayerPanelProps = {
   hasZoneId: boolean;
@@ -132,7 +133,7 @@ export function CategoryPlayerPanel({
             onChange={(e) => setPlayerId(e.target.value)}
             onBlur={onBlurField}
             className={fieldInputClass}
-            placeholder="356892037"
+            placeholder="1234567890"
             autoComplete="off"
             inputMode="numeric"
           />
@@ -145,7 +146,7 @@ export function CategoryPlayerPanel({
               onChange={(e) => setZoneId(e.target.value)}
               onBlur={onBlurField}
               className={fieldInputClass}
-              placeholder="9595"
+              placeholder="1234"
               autoComplete="off"
               inputMode="numeric"
             />
@@ -153,17 +154,17 @@ export function CategoryPlayerPanel({
         ) : null}
       </div>
 
-      <div className="mt-4 flex min-h-[52px] items-center justify-between gap-3 rounded-lg border border-violet-500/30 bg-[#0d0d18]/90 px-4 py-3">
-        <span className="text-sm font-medium text-violet-300/90">{t('playerPanel.player')}</span>
-        <span className="max-w-[70%] truncate text-right text-sm font-semibold text-white">
-          {busy ? <span className="text-violet-200/80">{t('playerPanel.checking')}</span> : null}
+      <div className="mt-4 flex min-h-[52px] items-center justify-between gap-3 rounded-lg border border-violet-200 bg-white/95 px-4 py-3 dark:border-violet-500/30 dark:bg-[#0d0d18]/90">
+        <span className="text-sm font-medium text-violet-900 dark:text-violet-300/90">{t('playerPanel.player')}</span>
+        <span className="max-w-[70%] truncate text-right text-sm font-semibold text-slate-900 dark:text-white">
+          {busy ? <span className="text-violet-700 dark:text-violet-200/80">{t('playerPanel.checking')}</span> : null}
           {!busy && displayName ? displayName : null}
           {!busy && !displayName ? <span className="font-normal text-slate-500">—</span> : null}
         </span>
       </div>
 
       {showGuestEmail ? (
-        <div className="mt-5 border-t border-violet-500/20 pt-5">
+        <div className="mt-5 border-t border-violet-200 pt-5 dark:border-violet-500/20">
           <label className={fieldLabelClass}>{t('playerPanel.email')}</label>
           <input
             type="email"
@@ -183,10 +184,10 @@ export function CategoryPlayerPanel({
             placeholder="name@gmail.com"
             autoComplete="email"
           />
-          <p className="mt-2 text-xs text-violet-200/50">{t('playerPanel.emailHint')}</p>
+          <p className="mt-2 text-xs text-violet-700/80 dark:text-violet-200/50">{t('playerPanel.emailHint')}</p>
         </div>
       ) : (
-        <div className="mt-5 border-t border-violet-500/20 pt-5 text-sm text-violet-200/70">
+        <div className="mt-5 border-t border-violet-200 pt-5 text-sm text-violet-800 dark:border-violet-500/20 dark:text-violet-200/70">
           {t('playerPanel.loggedInHint', { email: profileEmail ?? '—' })}
         </div>
       )}

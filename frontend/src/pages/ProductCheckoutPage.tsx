@@ -73,13 +73,23 @@ export function ProductCheckoutPage() {
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     toast.success(t('checkout.toastSuccess', { email: receiptEmail }));
+    if (product && category) {
+      const pending = {
+        categoryId: catId,
+        productId: prodId,
+        productName: product.name,
+        categoryName: category.name,
+      };
+      sessionStorage.setItem('skyrush_pending_review', JSON.stringify(pending));
+      navigate('/reviews', { state: { pendingReview: pending } });
+    }
   };
 
   if (!validParams) {
     return (
       <BrandLayout title={t('checkout.errorTitle')}>
         <div className={glassCardClass}>
-          <p className="text-slate-300">{t('checkout.invalidUrl')}</p>
+          <p className="text-slate-600 dark:text-slate-300">{t('checkout.invalidUrl')}</p>
           <Link to="/" className={'mt-4 inline-block ' + primaryButtonClass}>
             {t('checkout.homeLink')}
           </Link>
@@ -92,7 +102,7 @@ export function ProductCheckoutPage() {
     return (
       <BrandLayout title={t('checkout.notFoundTitle')}>
         <div className={glassCardClass}>
-          <p className="text-slate-300">{t('checkout.notFoundBody')}</p>
+          <p className="text-slate-600 dark:text-slate-300">{t('checkout.notFoundBody')}</p>
           <Link to={`/category/${catId}`} className={'mt-4 inline-block ' + primaryButtonClass}>
             {t('checkout.back')}
           </Link>
@@ -108,7 +118,7 @@ export function ProductCheckoutPage() {
           {t('checkout.backCategory')}
         </Link>
         <div className={glassCardClass}>
-          <p className="text-slate-300">
+          <p className="text-slate-600 dark:text-slate-300">
             {guestMode ? t('checkout.needIdBodyGuest') : t('checkout.needIdBodyUser')}
           </p>
         </div>
@@ -123,31 +133,31 @@ export function ProductCheckoutPage() {
       </Link>
 
       {loading ? (
-        <div className={glassCardClass + ' text-slate-300'}>{t('checkout.loading')}</div>
+        <div className={glassCardClass + ' text-slate-600 dark:text-slate-300'}>{t('checkout.loading')}</div>
       ) : (
         <form onSubmit={onSubmit} className={glassCardClass + ' space-y-6'}>
-          <div className="flex flex-wrap items-end justify-between gap-4 border-b border-white/10 pb-6">
+          <div className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-200 pb-6 dark:border-white/10">
             <div>
-              <div className="text-sm text-slate-400">{t('checkout.price')}</div>
-              <div className="text-2xl font-semibold text-emerald-200">
+              <div className="text-sm text-slate-500 dark:text-slate-400">{t('checkout.price')}</div>
+              <div className="text-2xl font-semibold text-emerald-700 dark:text-emerald-200">
                 {product!.price} {t('category.currency')}
               </div>
             </div>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-sm">
-            <div className="text-slate-400">{t('checkout.player')}</div>
-            <div className="mt-1 font-medium text-white">{checkout!.playerDisplayName}</div>
-            <div className="mt-3 text-slate-400">{t('checkout.idLabel')}</div>
-            <div className="text-slate-200">
+          <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm dark:border-white/10 dark:bg-black/25">
+            <div className="text-slate-500 dark:text-slate-400">{t('checkout.player')}</div>
+            <div className="mt-1 font-medium text-slate-900 dark:text-white">{checkout!.playerDisplayName}</div>
+            <div className="mt-3 text-slate-500 dark:text-slate-400">{t('checkout.idLabel')}</div>
+            <div className="text-slate-800 dark:text-slate-200">
               {checkout!.playerId}
               {category!.hasZoneId ? ` · ${t('checkout.serverPrefix')} ${checkout!.zoneId}` : ''}
             </div>
-            <div className="mt-3 text-slate-400">{t('checkout.receiptEmail')}</div>
-            <div className="text-slate-200">{receiptEmail}</div>
+            <div className="mt-3 text-slate-500 dark:text-slate-400">{t('checkout.receiptEmail')}</div>
+            <div className="text-slate-800 dark:text-slate-200">{receiptEmail}</div>
           </div>
 
-          <div className="rounded-xl border border-dashed border-white/20 bg-white/5 p-4 text-sm text-slate-400">
+          <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600 dark:border-white/20 dark:bg-white/5 dark:text-slate-400">
             {t('checkout.paymentNote')}
           </div>
 
