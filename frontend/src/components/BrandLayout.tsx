@@ -33,7 +33,7 @@ export function BrandLayout({ children, topSlot, title, subtitle }: BrandLayoutP
 
       <BrandHeader />
 
-      <main className="relative z-0 mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+      <main className="relative z-0 mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
         {topSlot ? <div className="mb-10">{topSlot}</div> : null}
         {(title || subtitle) && (
           <div className="mb-8">

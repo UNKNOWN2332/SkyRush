@@ -17,8 +17,8 @@ export function BrandHeader() {
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-[300] isolate w-full border-b border-slate-200/90 bg-white/95 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-[#060915]/95 dark:shadow-[0_1px_0_rgba(255,255,255,0.06)]">
-        <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-2 sm:gap-4 sm:px-6 sm:py-2.5 md:py-3">
-          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4 md:gap-6">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:gap-4 sm:px-6 sm:py-2.5 md:py-3">
+          <div className="flex min-w-0 w-full flex-col gap-2 sm:flex-1 sm:flex-row sm:items-center sm:gap-4 md:gap-6">
             <Link
               to="/"
               aria-label={t('header.brandAria')}
@@ -40,7 +40,7 @@ export function BrandHeader() {
             </Link>
 
             <nav
-              className="flex min-w-0 items-center gap-0 sm:gap-0.5 md:gap-1"
+              className="flex min-w-0 w-full items-center gap-0.5 overflow-x-auto pb-1 sm:w-auto sm:overflow-visible sm:pb-0 md:gap-1"
               aria-label={t('header.mainNavAria')}
             >
               <NavLink
@@ -83,7 +83,7 @@ export function BrandHeader() {
             </nav>
           </div>
 
-          <nav className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
+          <nav className="flex w-full shrink-0 flex-wrap items-center justify-end gap-2 sm:w-auto sm:flex-nowrap sm:gap-3">
             <ThemeToggle />
             {user ? (
               <>
@@ -114,7 +114,7 @@ export function BrandHeader() {
         </div>
       </header>
       {/* Fixed header is out of document flow — reserve height so content does not sit underneath */}
-      <div className="h-[60px] shrink-0 sm:h-[64px] md:h-[68px]" aria-hidden />
+      <div className="h-[118px] shrink-0 sm:h-[64px] md:h-[68px]" aria-hidden />
     </>
   );
 }

@@ -267,21 +267,25 @@ export function TournamentsPage() {
 
   return (
     <BrandLayout title={t('tournaments.title')} subtitle={t('tournaments.subtitle')}>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <Link to="/" className={ghostButtonClass + ' inline-flex text-sm'}>
           {t('tournaments.backHome')}
         </Link>
         {user ? (
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <Link to="/tournaments/mine" className={myTournamentsButtonClass}>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+            <Link to="/tournaments/mine" className={myTournamentsButtonClass + ' w-full sm:w-auto'}>
               {t('tournaments.myTournaments')}
             </Link>
-            <button type="button" onClick={() => setCreateOpen(true)} className={primaryButtonClass + ' text-sm'}>
+            <button
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              className={primaryButtonClass + ' w-full text-sm sm:w-auto'}
+            >
               {t('tournaments.createOpen')}
             </button>
           </div>
         ) : (
-          <Link to="/login" className={primaryButtonClass + ' inline-flex text-sm'}>
+          <Link to="/login" className={primaryButtonClass + ' inline-flex w-full justify-center text-sm sm:w-auto'}>
             {t('tournaments.loginToCreate')}
           </Link>
         )}
@@ -521,11 +525,11 @@ export function TournamentsPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex flex-wrap justify-end gap-2 border-t border-slate-200/80 pt-4 dark:border-white/10">
-                    <button type="button" className={ghostButtonClass} onClick={() => setCreateOpen(false)}>
+                  <div className="flex flex-col-reverse gap-2 border-t border-slate-200/80 pt-4 sm:flex-row sm:justify-end dark:border-white/10">
+                    <button type="button" className={ghostButtonClass + ' w-full sm:w-auto'} onClick={() => setCreateOpen(false)}>
                       {t('tournaments.cancel')}
                     </button>
-                    <button type="submit" disabled={saving} className={primaryButtonClass}>
+                    <button type="submit" disabled={saving} className={primaryButtonClass + ' w-full sm:w-auto'}>
                       {saving ? t('tournaments.saving') : t('tournaments.submitCreate')}
                     </button>
                   </div>
