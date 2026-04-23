@@ -8,6 +8,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
 import org.springframework.security.config.web.server.ServerHttpSecurity
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.web.server.SecurityWebFilterChain
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource
@@ -22,7 +23,9 @@ import java.util.*
 
 @Configuration
 @EnableWebFluxSecurity
-class SecurityConfig {
+class SecurityConfig(
+    @Value("\${app.cors.allowed-origins}") private val corsAllowedOrigins: String,
+) {
 
     @Bean
     fun passwordEncoder() = BCryptPasswordEncoder()
@@ -56,7 +59,9 @@ class SecurityConfig {
     // 2. CORS sozlamalarini shu yerning o'zida yozamiz
     private fun corsConfigurationSource(): UrlBasedCorsConfigurationSource {
         val config = CorsConfiguration()
-        config.allowedOrigins = listOf("http://localhost:5173")
+        config.allowedOrigins = corsAllowedOrigins.split(',')
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
         config.allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
         config.allowedHeaders = listOf("*")
         config.allowCredentials = true
