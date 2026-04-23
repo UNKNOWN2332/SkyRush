@@ -6,10 +6,9 @@ spring:
     name: SkyRush
   # Default: Render ichki PostgreSQL. Lokal: SPRING_R2DBC_URL / USERNAME / PASSWORD ni IDE yoki .env da localhost ga moslab qo‘ying.
   r2dbc:
-    # Render ichki tarmoq (bir xil regiondagi Web Service uchun). Tashqaridan ulanish: SPRING_R2DBC_URL ni external host + sslMode bilan qo‘ying.
-    url: ${SPRING_R2DBC_URL:r2dbc:postgresql://dpg-d7kmqffavr4c73e1eu2g-a:5432/skyrush}
+    url: ${SPRING_R2DBC_URL:r2dbc:postgresql://dpg-d7kmqffavr4c73e1eu2g-a.oregon-postgres.render.com:5432/skyrush?sslMode=verify-full}
     username: ${SPRING_R2DBC_USERNAME:skyrush_user}
-    password: ${SPRING_R2DBC_PASSWORD:}
+    password: ${SPRING_R2DBC_PASSWORD:vbD8eT8uqG4rmhEvduTZM4Ldy1crLrcX}
   sql:
     init:
       mode: always
