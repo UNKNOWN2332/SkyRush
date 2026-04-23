@@ -10,6 +10,7 @@ import org.springframework.security.core.context.ReactiveSecurityContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import uz.shukrullaev.com.skyrush.DTOs.CreateTournamentRequest
+import uz.shukrullaev.com.skyrush.DTOs.InviteTeamsRequest
 import uz.shukrullaev.com.skyrush.DTOs.RegisterTeamRequest
 import uz.shukrullaev.com.skyrush.DTOs.TournamentDetailResponse
 import uz.shukrullaev.com.skyrush.DTOs.TournamentFormatRuleRequest
@@ -19,6 +20,7 @@ import uz.shukrullaev.com.skyrush.DTOs.TournamentStageRequest
 import uz.shukrullaev.com.skyrush.DTOs.TournamentStageResponse
 import uz.shukrullaev.com.skyrush.DTOs.TournamentSummaryResponse
 import uz.shukrullaev.com.skyrush.DTOs.TournamentTeamResponse
+import uz.shukrullaev.com.skyrush.DTOs.UpdateTournamentRequest
 import uz.shukrullaev.com.skyrush.entities.Tournament
 import uz.shukrullaev.com.skyrush.entities.TournamentFormatRule
 import uz.shukrullaev.com.skyrush.entities.TournamentStage
@@ -32,6 +34,8 @@ import uz.shukrullaev.com.skyrush.repositories.TournamentTeamRepository
 import uz.shukrullaev.com.skyrush.repositories.UserRepository
 import uz.shukrullaev.com.skyrush.tournament.TournamentEventHub
 import uz.shukrullaev.com.skyrush.tournament.TournamentFormats
+import uz.shukrullaev.com.skyrush.tournament.TournamentScale
+import java.time.Instant
 
 @Service
 class TournamentService(
@@ -58,27 +62,62 @@ class TournamentService(
 
     fun listSummaries(): Flow<TournamentSummaryResponse> = flow {
         tournamentRepository.findAllOrdered().collect { t ->
-            val id = t.id ?: return@collect
-            val count = teamRepository.countByTournamentId(id)
-            val org = userRepository.findById(t.organizerId)
-            emit(
-                TournamentSummaryResponse(
-                    id = id,
-                    title = t.title,
-                    description = t.description,
-                    status = t.status,
-                    maxTeams = t.maxTeams,
-                    teamCount = count,
-                    bestOf = t.bestOf,
-                    phasedFormat = t.phasedFormat,
-                    hasCustomStages = t.hasCustomStages,
-                    rosterSize = t.rosterSize,
-                    gameCode = t.gameCode,
-                    organizerUsername = org?.username ?: "?",
-                    createdAt = t.createdAt,
-                ),
-            )
+            if (t.id != null) emit(tournamentToSummary(t))
         }
+    }
+
+    suspend fun listMyOrganized(): List<TournamentSummaryResponse> {
+        val user = requireCurrentUser()
+        val uid = user.id ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED)
+        return tournamentRepository.findByOrganizerIdOrderByCreatedAtDesc(uid)
+            .toList()
+            .map { tournamentToSummary(it) }
+    }
+
+    /** Kapitan sifatida ro‘yxatdan o‘tgan turnirlar (akkaunt bilan bog‘langan faqat kapitan). */
+    suspend fun listMyCaptainTournaments(): List<TournamentSummaryResponse> {
+        val user = requireCurrentUser()
+        val uid = user.id ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED)
+        val tids = teamRepository.findByCaptainUserIdOrderByCreatedAtDesc(uid)
+            .toList()
+            .map { it.tournamentId }
+            .distinct()
+        return tids
+            .mapNotNull { tournamentRepository.findById(it) }
+            .sortedByDescending { it.createdAt ?: Instant.EPOCH }
+            .map { tournamentToSummary(it) }
+    }
+
+    private suspend fun requireCurrentUser() = run {
+        val username = currentUsername()
+        userRepository.findByUsername(username) ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED)
+    }
+
+    private suspend fun tournamentToSummary(t: Tournament): TournamentSummaryResponse {
+        val id = t.id ?: error("tournament without id")
+        val count = teamRepository.countByTournamentId(id)
+        val org = userRepository.findById(t.organizerId)
+        return TournamentSummaryResponse(
+            id = id,
+            title = t.title,
+            description = t.description,
+            status = t.status,
+            maxTeams = t.maxTeams,
+            teamCount = count,
+            bestOf = t.bestOf,
+            phasedFormat = t.phasedFormat,
+            hasCustomStages = t.hasCustomStages,
+            tournamentScale = t.tournamentScale,
+            bigTournament = t.bigTournament,
+            rosterSize = t.rosterSize,
+            gameCode = t.gameCode,
+            registrationOpenAt = t.registrationOpenAt,
+            registrationCloseAt = t.registrationCloseAt,
+            drawAt = t.drawAt,
+            startAt = t.startAt,
+            organizerUsername = org?.username ?: "?",
+            createdAt = t.createdAt,
+        )
     }
 
     suspend fun getDetail(id: Long): TournamentDetailResponse {
@@ -110,6 +149,7 @@ class TournamentService(
                 id = team.id!!,
                 teamName = team.teamName,
                 captainUsername = cap?.username ?: "?",
+                isInvited = team.isInvited,
                 members = m.map { mm ->
                     TournamentMemberResponse(mm.nickname, mm.gamePlayerId, mm.isCaptain)
                 },
@@ -125,10 +165,16 @@ class TournamentService(
             bestOf = t.bestOf,
             phasedFormat = t.phasedFormat,
             hasCustomStages = t.hasCustomStages,
+            tournamentScale = t.tournamentScale,
+            bigTournament = t.bigTournament,
             formatRules = formatRules,
             stages = stages,
             rosterSize = t.rosterSize,
             gameCode = t.gameCode,
+            registrationOpenAt = t.registrationOpenAt,
+            registrationCloseAt = t.registrationCloseAt,
+            drawAt = t.drawAt,
+            startAt = t.startAt,
             organizerUsername = org?.username ?: "?",
             createdAt = t.createdAt,
             teams = teamResponses,
@@ -147,8 +193,61 @@ class TournamentService(
                 "use either formatRules or stages, not both",
             )
         }
-        val normalizedStages = if (hasStages) normalizeStages(request.maxTeams, request.stages!!) else null
-        val normalizedRules = if (normalizedStages != null) null else normalizeFormatRules(request.maxTeams, request.formatRules)
+        var scale = TournamentScale.parse(request.tournamentScale)
+        if (request.legacyBigTournament == true) {
+            scale = TournamentScale.BIG
+        }
+        if (!TournamentScale.isKnown(scale)) {
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "tournamentScale must be SMALL, MEDIUM, or BIG",
+            )
+        }
+        val maxTeams = request.maxTeams
+        validateMaxTeamsByScale(scale, maxTeams)
+        if (scale == TournamentScale.MEDIUM) {
+            if (request.rosterSize < TournamentScale.ROSTER_MIN ||
+                request.rosterSize > TournamentScale.ROSTER_MAX_MEDIUM
+            ) {
+                throw ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "medium tournament: rosterSize must be ${TournamentScale.ROSTER_MIN}..${TournamentScale.ROSTER_MAX_MEDIUM}",
+                )
+            }
+        }
+        val isBig = scale == TournamentScale.BIG
+        if (isBig && (hasRules || hasStages)) {
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "big tournament cannot use formatRules or stages",
+            )
+        }
+        if (scale == TournamentScale.SMALL && hasStages) {
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "small tournament cannot use custom stages",
+            )
+        }
+        if (scale == TournamentScale.SMALL && hasRules) {
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "small tournament uses fixed format rules (BO3 / BO5 / BO7)",
+            )
+        }
+        val normalizedStages: List<StageDraft>?
+        val normalizedRules: List<Pair<Int, Int>>?
+        when (scale) {
+            TournamentScale.SMALL -> {
+                normalizedStages = null
+                normalizedRules = smallTournamentPhasedBestOfRules()
+            }
+            else -> {
+                normalizedStages = if (hasStages) normalizeStages(request.maxTeams, request.stages!!) else null
+                normalizedRules =
+                    if (normalizedStages != null) null
+                    else normalizeFormatRules(request.maxTeams, request.formatRules)
+            }
+        }
         val phased = normalizedRules != null || normalizedStages != null
         val hasCustomStages = normalizedStages != null
         val bestOfColumn = when {
@@ -156,6 +255,8 @@ class TournamentService(
                 normalizedStages.minWith(
                     compareBy({ it.sortOrder }, { TournamentFormats.bracketTrackRank(it.bracketTrack) }),
                 ).bestOf
+            normalizedRules != null && scale == TournamentScale.SMALL ->
+                normalizedRules.maxOf { it.second }
             normalizedRules != null -> normalizedRules.maxBy { it.first }.second
             else -> request.bestOf
         }
@@ -174,6 +275,8 @@ class TournamentService(
                 bestOf = bestOfColumn,
                 phasedFormat = phased,
                 hasCustomStages = hasCustomStages,
+                tournamentScale = scale,
+                bigTournament = isBig,
                 rosterSize = request.rosterSize,
                 gameCode = gameCode,
             ),
@@ -215,12 +318,119 @@ class TournamentService(
             bestOf = saved.bestOf,
             phasedFormat = saved.phasedFormat,
             hasCustomStages = saved.hasCustomStages,
+            tournamentScale = saved.tournamentScale,
+            bigTournament = saved.bigTournament,
             rosterSize = saved.rosterSize,
             gameCode = saved.gameCode,
+            registrationOpenAt = saved.registrationOpenAt,
+            registrationCloseAt = saved.registrationCloseAt,
+            drawAt = saved.drawAt,
+            startAt = saved.startAt,
             organizerUsername = user.username,
             createdAt = saved.createdAt,
         )
     }
+
+    suspend fun updateTournament(id: Long, request: UpdateTournamentRequest): TournamentSummaryResponse {
+        if (request.title == null &&
+            request.description == null &&
+            request.status == null &&
+            request.maxTeams == null &&
+            request.registrationOpenAt == null &&
+            request.registrationCloseAt == null &&
+            request.drawAt == null &&
+            request.startAt == null
+        ) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "at least one field is required")
+        }
+        val user = requireCurrentUser()
+        val uid = user.id ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED)
+        val t = tournamentRepository.findById(id) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+        if (t.organizerId != uid) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "only organizer can update tournament")
+        }
+        var newTitle = t.title
+        if (request.title != null) {
+            newTitle = request.title.trim()
+            if (newTitle.length < 2) {
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "title too short")
+            }
+        }
+        var newDesc = t.description
+        if (request.description != null) {
+            newDesc = request.description.trim().takeIf { it.isNotEmpty() }
+        }
+        var newStatus = t.status
+        if (request.status != null) {
+            val s = request.status.trim().uppercase()
+            if (s != "REGISTRATION_OPEN" && s != "REGISTRATION_CLOSED") {
+                throw ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "status must be REGISTRATION_OPEN or REGISTRATION_CLOSED",
+                )
+            }
+            newStatus = s
+        }
+        var newMaxTeams = t.maxTeams
+        if (request.maxTeams != null) {
+            validateMaxTeamsByScale(t.tournamentScale, request.maxTeams)
+            val teamCount = teamRepository.countByTournamentId(id)
+            if (request.maxTeams < teamCount) {
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "maxTeams cannot be below current teams count")
+            }
+            newMaxTeams = request.maxTeams
+        }
+        var regOpen = t.registrationOpenAt
+        if (request.registrationOpenAt != null) regOpen = request.registrationOpenAt
+        var regClose = t.registrationCloseAt
+        if (request.registrationCloseAt != null) regClose = request.registrationCloseAt
+        var drawAt = t.drawAt
+        if (request.drawAt != null) drawAt = request.drawAt
+        var startAt = t.startAt
+        if (request.startAt != null) startAt = request.startAt
+        if (regOpen != null) {
+            val minOpenAt = Instant.now().plusSeconds(24 * 60 * 60)
+            if (regOpen.isBefore(minOpenAt)) {
+                throw ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "registrationOpenAt must be at least 24 hours in the future",
+                )
+            }
+        }
+        if (regOpen != null && regClose != null && regClose.isBefore(regOpen)) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "registrationCloseAt must be after registrationOpenAt")
+        }
+        if (drawAt != null && regClose != null && !drawAt.isAfter(regClose)) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "drawAt must be after registrationCloseAt")
+        }
+        if (startAt != null && drawAt != null) {
+            val minStartAt = drawAt.plusSeconds(24 * 60 * 60)
+            if (startAt.isBefore(minStartAt)) {
+                throw ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "startAt must be at least 24 hours after drawAt",
+                )
+            }
+        }
+        val saved = tournamentRepository.save(
+            t.copy(
+                title = newTitle,
+                description = newDesc,
+                status = newStatus,
+                maxTeams = newMaxTeams,
+                registrationOpenAt = regOpen,
+                registrationCloseAt = regClose,
+                drawAt = drawAt,
+                startAt = startAt,
+            ),
+        )
+        eventHub.notifyTournamentsChanged()
+        return tournamentToSummary(saved)
+    }
+
+    /** Qolgan jamoalar soni bo‘yicha: ≥9 BO3, keyin BO5, final uchun BO7. */
+    private fun smallTournamentPhasedBestOfRules(): List<Pair<Int, Int>> =
+        listOf(9 to 3, 8 to 5, 3 to 5, 1 to 7)
 
     private fun normalizeStages(maxTeams: Int, raw: List<TournamentStageRequest>): List<StageDraft> {
         val keys = raw.map { it.sortOrder to it.bracketTrack.trim().uppercase() }
@@ -321,6 +531,13 @@ class TournamentService(
         if (t.status != "REGISTRATION_OPEN") {
             throw ResponseStatusException(HttpStatus.CONFLICT, "registration closed")
         }
+        val now = Instant.now()
+        if (t.registrationOpenAt != null && now.isBefore(t.registrationOpenAt)) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "registration not started yet")
+        }
+        if (t.registrationCloseAt != null && now.isAfter(t.registrationCloseAt)) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "registration deadline passed")
+        }
         val tid = t.id!!
         if (teamRepository.countByTournamentId(tid) >= t.maxTeams) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "tournament full")
@@ -378,8 +595,83 @@ class TournamentService(
             id = teamId,
             teamName = team.teamName,
             captainUsername = user.username,
+            isInvited = false,
             members = members,
         )
+    }
+
+    suspend fun inviteTeams(tournamentId: Long, request: InviteTeamsRequest): List<TournamentTeamResponse> {
+        val user = requireCurrentUser()
+        val uid = user.id ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED)
+        val t = tournamentRepository.findById(tournamentId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+        if (t.organizerId != uid) throw ResponseStatusException(HttpStatus.FORBIDDEN, "only organizer can invite teams")
+
+        val normalizedNames = request.teamNames
+            .map { it.trim() }
+            .filter { it.length >= 2 }
+            .distinctBy { it.lowercase() }
+        if (normalizedNames.isEmpty()) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "no valid team names provided")
+        }
+        val existing = teamRepository.findByTournamentId(tournamentId).toList()
+        val existingNames = existing.map { it.teamName.trim().lowercase() }.toMutableSet()
+        val slotsLeft = t.maxTeams - existing.size
+        if (slotsLeft <= 0) throw ResponseStatusException(HttpStatus.CONFLICT, "tournament full")
+
+        val toCreate = normalizedNames.filter { it.lowercase() !in existingNames }.take(slotsLeft)
+        if (toCreate.isEmpty()) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "all invited team names already exist")
+        }
+
+        val created = mutableListOf<TournamentTeamResponse>()
+        for (name in toCreate) {
+            val saved = teamRepository.save(
+                TournamentTeam(
+                    tournamentId = tournamentId,
+                    teamName = name,
+                    captainUserId = uid,
+                    isInvited = true,
+                ),
+            )
+            created += TournamentTeamResponse(
+                id = saved.id!!,
+                teamName = saved.teamName,
+                captainUsername = user.username,
+                isInvited = true,
+                members = emptyList(),
+            )
+        }
+        eventHub.notifyTournamentsChanged()
+        return created
+    }
+
+    private fun validateMaxTeamsByScale(scale: String, maxTeams: Int) {
+        when (scale) {
+            TournamentScale.SMALL -> {
+                if (maxTeams < TournamentScale.SMALL_MIN_TEAMS || maxTeams > TournamentScale.SMALL_MAX_TEAMS) {
+                    throw ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "small tournament: maxTeams must be ${TournamentScale.SMALL_MIN_TEAMS}..${TournamentScale.SMALL_MAX_TEAMS}",
+                    )
+                }
+            }
+            TournamentScale.MEDIUM -> {
+                if (maxTeams < TournamentScale.MEDIUM_MIN_TEAMS || maxTeams > TournamentScale.MEDIUM_MAX_TEAMS) {
+                    throw ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "medium tournament: maxTeams must be ${TournamentScale.MEDIUM_MIN_TEAMS}..${TournamentScale.MEDIUM_MAX_TEAMS}",
+                    )
+                }
+            }
+            TournamentScale.BIG -> {
+                if (maxTeams < TournamentScale.BIG_MIN_MAX_TEAMS) {
+                    throw ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "big tournament: maxTeams must be at least ${TournamentScale.BIG_MIN_MAX_TEAMS}",
+                    )
+                }
+            }
+        }
     }
 
     private suspend fun currentUsername(): String {

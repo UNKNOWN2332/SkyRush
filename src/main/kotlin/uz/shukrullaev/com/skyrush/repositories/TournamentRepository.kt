@@ -11,4 +11,6 @@ interface TournamentRepository : CoroutineCrudRepository<Tournament, Long> {
 
     @Query("SELECT * FROM tournaments ORDER BY created_at DESC NULLS LAST, id DESC")
     fun findAllOrdered(): Flow<Tournament>
+
+    fun findByOrganizerIdOrderByCreatedAtDesc(organizerId: Long): Flow<Tournament>
 }

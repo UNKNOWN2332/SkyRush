@@ -12,5 +12,8 @@ data class TournamentTeam(
     @Column("team_name") val teamName: String,
     @Column("captain_user_id") val captainUserId: Long,
     @Column("logo_url") val logoUrl: String? = null,
+    @Column("is_invited") val isInvited: Boolean = false,
+    /** Oltin jamoa: 1-bosqichni o‘tkazib, 2-bosqichda (32) qatnashadi. */
+    @Column("is_golden") val isGolden: Boolean = false,
     @Column("created_at") val createdAt: Instant? = null,
 )

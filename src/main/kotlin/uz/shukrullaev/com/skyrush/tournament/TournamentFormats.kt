@@ -9,7 +9,7 @@ object TournamentFormats {
     val ALLOWED_BRACKET_TRACKS: Set<String> = setOf("MAIN", "WINNERS", "LOSERS", "GRAND_FINAL")
     const val PHASE_GROUP_ROUND_ROBIN: String = "GROUP_ROUND_ROBIN"
     const val PHASE_ELIMINATION: String = "ELIMINATION"
-    const val MAX_TEAMS: Int = 1024
+    const val MAX_TEAMS: Int = Int.MAX_VALUE
     const val MIN_TEAMS: Int = 2
 
     fun bracketTrackRank(track: String): Int =

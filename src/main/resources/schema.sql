@@ -112,12 +112,14 @@ CREATE TABLE IF NOT EXISTS tournaments
     status          VARCHAR(32) NOT NULL DEFAULT 'REGISTRATION_OPEN',
     max_teams       INTEGER     NOT NULL,
     best_of         SMALLINT    NOT NULL,
-    roster_size     INTEGER     NOT NULL DEFAULT 5 CHECK (roster_size >= 1 AND roster_size <= 20),
+    roster_size     INTEGER     NOT NULL DEFAULT 5 CHECK (roster_size >= 5 AND roster_size <= 20),
     game_code       VARCHAR(32) NOT NULL DEFAULT 'ML',
+    draw_at         TIMESTAMPTZ,
+    start_at        TIMESTAMPTZ,
     phased_format     BOOLEAN     NOT NULL DEFAULT FALSE,
     has_custom_stages BOOLEAN     NOT NULL DEFAULT FALSE,
     created_at        TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT tournaments_max_teams_check CHECK (max_teams >= 2 AND max_teams <= 1024),
+    CONSTRAINT tournaments_max_teams_check CHECK (max_teams >= 2 AND max_teams <= 2147483647),
     CONSTRAINT tournaments_best_of_check CHECK (best_of IN (1, 2, 3, 5, 7, 9))
 );
 
@@ -156,11 +158,19 @@ CREATE INDEX IF NOT EXISTS idx_tournament_stages_tournament ON tournament_stages
 -- Eski jadval (128 / faqat toq BO): Spring schema.sql ni ; bo‘yicha bo‘laklaydi — DO $$...$$ ishonchsiz.
 -- Har ishga tushirishda DROP + ADD: constraint yo‘q bo‘lsa ADD, bor bo‘lsa DROP dan keyin qayta yaratiladi.
 ALTER TABLE tournaments DROP CONSTRAINT IF EXISTS tournaments_max_teams_check;
-ALTER TABLE tournaments ADD CONSTRAINT tournaments_max_teams_check CHECK (max_teams >= 2 AND max_teams <= 1024);
+ALTER TABLE tournaments ADD CONSTRAINT tournaments_max_teams_check CHECK (max_teams >= 2 AND max_teams <= 2147483647);
+ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS tournament_scale VARCHAR(16) NOT NULL DEFAULT 'MEDIUM';
 ALTER TABLE tournaments DROP CONSTRAINT IF EXISTS tournaments_best_of_check;
 ALTER TABLE tournaments ADD CONSTRAINT tournaments_best_of_check CHECK (best_of IN (1, 2, 3, 5, 7, 9));
 ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS phased_format BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS has_custom_stages BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS registration_open_at TIMESTAMPTZ;
+ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS registration_close_at TIMESTAMPTZ;
+ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS draw_at TIMESTAMPTZ;
+ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS start_at TIMESTAMPTZ;
+ALTER TABLE tournaments DROP CONSTRAINT IF EXISTS tournaments_roster_size_check;
+UPDATE tournaments SET roster_size = 5 WHERE roster_size IS NOT NULL AND roster_size < 5;
+ALTER TABLE tournaments ADD CONSTRAINT tournaments_roster_size_check CHECK (roster_size >= 5 AND roster_size <= 20);
 
 CREATE TABLE IF NOT EXISTS tournament_teams
 (
@@ -169,6 +179,7 @@ CREATE TABLE IF NOT EXISTS tournament_teams
     team_name        VARCHAR(120) NOT NULL,
     captain_user_id  INTEGER     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     logo_url         TEXT,
+    is_invited       BOOLEAN     NOT NULL DEFAULT FALSE,
     created_at       TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (tournament_id, team_name)
 );
@@ -186,3 +197,67 @@ CREATE TABLE IF NOT EXISTS tournament_team_members
 );
 
 CREATE INDEX IF NOT EXISTS idx_tournament_members_team ON tournament_team_members (team_id);
+
+ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS big_tournament BOOLEAN NOT NULL DEFAULT FALSE;
+UPDATE tournaments SET tournament_scale = 'BIG' WHERE big_tournament = TRUE;
+ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS big_phase VARCHAR(32);
+ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS big_qualifier_round INTEGER NOT NULL DEFAULT -1;
+
+ALTER TABLE tournament_teams ADD COLUMN IF NOT EXISTS is_golden BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE tournament_teams ADD COLUMN IF NOT EXISTS is_invited BOOLEAN NOT NULL DEFAULT FALSE;
+
+CREATE TABLE IF NOT EXISTS tournament_matches
+(
+    id                       BIGSERIAL PRIMARY KEY,
+    tournament_id            BIGINT       NOT NULL REFERENCES tournaments (id) ON DELETE CASCADE,
+    bracket_key              VARCHAR(96)  NOT NULL DEFAULT '',
+    phase                    VARCHAR(24)  NOT NULL,
+    bracket_track            VARCHAR(24),
+    group_index              INTEGER      NOT NULL DEFAULT -1,
+    round_index              INTEGER      NOT NULL DEFAULT 0,
+    match_index              INTEGER      NOT NULL DEFAULT 0,
+    team_a_id                BIGINT REFERENCES tournament_teams (id) ON DELETE SET NULL,
+    team_b_id                BIGINT REFERENCES tournament_teams (id) ON DELETE SET NULL,
+    best_of                  SMALLINT     NOT NULL CHECK (best_of IN (1, 2, 3, 5, 7, 9)),
+    winner_team_id           BIGINT REFERENCES tournament_teams (id) ON DELETE SET NULL,
+    status                   VARCHAR(24)  NOT NULL DEFAULT 'SCHEDULED',
+    feeds_winner_to_match_id BIGINT REFERENCES tournament_matches (id) ON DELETE SET NULL,
+    feeds_winner_slot        CHAR(1)      CHECK (feeds_winner_slot IS NULL OR feeds_winner_slot IN ('A', 'B')),
+    feeds_loser_to_match_id  BIGINT REFERENCES tournament_matches (id) ON DELETE SET NULL,
+    feeds_loser_slot         CHAR(1)      CHECK (feeds_loser_slot IS NULL OR feeds_loser_slot IN ('A', 'B')),
+    is_grand_final           BOOLEAN      NOT NULL DEFAULT FALSE,
+    grand_final_set          SMALLINT     NOT NULL DEFAULT 1 CHECK (grand_final_set >= 1 AND grand_final_set <= 2),
+    closes_qualifier_phase   BOOLEAN      NOT NULL DEFAULT FALSE,
+    created_at               TIMESTAMPTZ  DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_tournament_matches_bracket_key
+    ON tournament_matches (tournament_id, bracket_key)
+    WHERE bracket_key <> '';
+
+CREATE INDEX IF NOT EXISTS idx_tournament_matches_tournament_phase
+    ON tournament_matches (tournament_id, phase);
+
+CREATE TABLE IF NOT EXISTS tournament_match_games
+(
+    id              BIGSERIAL PRIMARY KEY,
+    match_id        BIGINT      NOT NULL REFERENCES tournament_matches (id) ON DELETE CASCADE,
+    game_number     SMALLINT    NOT NULL CHECK (game_number >= 1),
+    winner_team_id  BIGINT      NOT NULL REFERENCES tournament_teams (id) ON DELETE CASCADE,
+    created_at      TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (match_id, game_number)
+);
+
+CREATE INDEX IF NOT EXISTS idx_tournament_match_games_match ON tournament_match_games (match_id);
+
+CREATE TABLE IF NOT EXISTS tournament_group_assignments
+(
+    id             BIGSERIAL PRIMARY KEY,
+    tournament_id  BIGINT      NOT NULL REFERENCES tournaments (id) ON DELETE CASCADE,
+    team_id        BIGINT      NOT NULL REFERENCES tournament_teams (id) ON DELETE CASCADE,
+    group_index    INTEGER     NOT NULL CHECK (group_index >= 0),
+    UNIQUE (tournament_id, team_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_tournament_group_assignments_tournament
+    ON tournament_group_assignments (tournament_id);

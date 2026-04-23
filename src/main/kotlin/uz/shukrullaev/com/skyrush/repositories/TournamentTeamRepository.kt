@@ -9,4 +9,5 @@ import uz.shukrullaev.com.skyrush.entities.TournamentTeam
 interface TournamentTeamRepository : CoroutineCrudRepository<TournamentTeam, Long> {
     suspend fun countByTournamentId(tournamentId: Long): Long
     fun findByTournamentId(tournamentId: Long): Flow<TournamentTeam>
+    fun findByCaptainUserIdOrderByCreatedAtDesc(captainUserId: Long): Flow<TournamentTeam>
 }

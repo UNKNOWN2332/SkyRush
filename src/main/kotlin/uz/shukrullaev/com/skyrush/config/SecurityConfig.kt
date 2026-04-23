@@ -42,6 +42,8 @@ class SecurityConfig {
                     .pathMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/products/category/**").permitAll()
                     .pathMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/reviews").permitAll()
                     .pathMatchers(HttpMethod.GET, "/api/v1/tournaments", "/api/v1/tournaments/**").permitAll()
+                    .pathMatchers(HttpMethod.PATCH, "/api/v1/tournaments/*").authenticated()
+                    .pathMatchers(HttpMethod.GET, "/api/v1/me/tournaments/**").authenticated()
                     .pathMatchers("/ws/**").permitAll()
                     .pathMatchers("/api/v1/admin/**").hasRole("ADMIN")
                     .anyExchange().authenticated()
@@ -55,7 +57,7 @@ class SecurityConfig {
     private fun corsConfigurationSource(): UrlBasedCorsConfigurationSource {
         val config = CorsConfiguration()
         config.allowedOrigins = listOf("http://localhost:5173")
-        config.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
+        config.allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
         config.allowedHeaders = listOf("*")
         config.allowCredentials = true
 

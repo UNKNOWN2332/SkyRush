@@ -12,6 +12,8 @@ import { ProductCheckoutPage } from './pages/ProductCheckoutPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { ReviewsPage } from './pages/ReviewsPage';
 import { TournamentDetailPage } from './pages/TournamentDetailPage';
+import { TournamentEditPage } from './pages/TournamentEditPage';
+import { MyTournamentsPage } from './pages/MyTournamentsPage';
 import { TournamentsPage } from './pages/TournamentsPage';
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
@@ -56,6 +58,8 @@ function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/reviews" element={<ReviewsPage />} />
+        <Route path="/tournaments/mine" element={<MyTournamentsPage />} />
+        <Route path="/tournaments/:id/edit" element={<TournamentEditPage />} />
         <Route path="/tournaments" element={<TournamentsPage />} />
         <Route path="/tournaments/:id" element={<TournamentDetailPage />} />
       </Routes>

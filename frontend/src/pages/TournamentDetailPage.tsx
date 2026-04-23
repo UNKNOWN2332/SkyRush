@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { tournamentsService, type TournamentDetailDto, type TournamentMemberDto } from '../api/tournamentsService';
-import { isAuthenticated } from '../api/authService';
+import { getStoredUser, isAuthenticated } from '../api/authService';
 import { BrandLayout, ghostButtonClass, glassCardClass, inputClass, labelClass, primaryButtonClass } from '../components/BrandLayout';
 
 function winsToWin(bestOf: number): number {
@@ -47,8 +47,12 @@ export function TournamentDetailPage() {
   const [detail, setDetail] = useState<TournamentDetailDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [bigControlSaving, setBigControlSaving] = useState(false);
   const [teamName, setTeamName] = useState('');
   const [members, setMembers] = useState<TournamentMemberDto[]>([]);
+  const [selectedGoldenTeamIds, setSelectedGoldenTeamIds] = useState<number[]>([]);
+  const [startQualBoInput, setStartQualBoInput] = useState('1');
+  const [nextRoundBoInput, setNextRoundBoInput] = useState('1');
 
   const load = useCallback(async () => {
     if (!Number.isFinite(id) || id < 1) {
@@ -60,6 +64,7 @@ export function TournamentDetailPage() {
       const d = await tournamentsService.get(id);
       setDetail(d);
       setMembers(emptyRoster(d.rosterSize));
+      setSelectedGoldenTeamIds([]);
     } catch {
       toast.error(t('tournaments.toastDetailError'));
       setDetail(null);
@@ -77,6 +82,16 @@ export function TournamentDetailPage() {
     if (detail.teamCount >= detail.maxTeams) return false;
     return true;
   }, [detail]);
+  const isOrganizer = Boolean(detail && getStoredUser()?.username === detail.organizerUsername);
+
+  const selectedGoldenSet = useMemo(() => new Set(selectedGoldenTeamIds), [selectedGoldenTeamIds]);
+  const nonGoldenSeedIds = useMemo(() => {
+    if (!detail) return [];
+    return detail.teams
+      .map((tm) => tm.id)
+      .filter((teamId) => !selectedGoldenSet.has(teamId))
+      .sort((a, b) => a - b);
+  }, [detail, selectedGoldenSet]);
 
   function setMember(i: number, patch: Partial<TournamentMemberDto>) {
     setMembers((prev) => prev.map((m, j) => (j === i ? { ...m, ...patch } : m)));
@@ -124,6 +139,52 @@ export function TournamentDetailPage() {
     }
   }
 
+  function toggleGolden(teamId: number) {
+    setSelectedGoldenTeamIds((prev) => (prev.includes(teamId) ? prev.filter((x) => x !== teamId) : [...prev, teamId]));
+  }
+
+  async function onStartQualifiers() {
+    if (!detail) return;
+    const bo = parseInt(startQualBoInput.trim(), 10);
+    if (!Number.isFinite(bo)) {
+      toast.error(t('tournaments.bigInvalidBo'));
+      return;
+    }
+    setBigControlSaving(true);
+    try {
+      await tournamentsService.markGoldenTeams(detail.id, selectedGoldenTeamIds);
+      await tournamentsService.startBigQualifiers(detail.id, {
+        orderedNonGoldenSeeds: nonGoldenSeedIds,
+        bestOf: bo,
+      });
+      toast.success(t('tournaments.bigStartOk'));
+      await load();
+    } catch {
+      toast.error(t('tournaments.bigActionError'));
+    } finally {
+      setBigControlSaving(false);
+    }
+  }
+
+  async function onCreateNextRound() {
+    if (!detail) return;
+    const bo = parseInt(nextRoundBoInput.trim(), 10);
+    if (!Number.isFinite(bo)) {
+      toast.error(t('tournaments.bigInvalidBo'));
+      return;
+    }
+    setBigControlSaving(true);
+    try {
+      await tournamentsService.createNextBigQualifierRound(detail.id, bo);
+      toast.success(t('tournaments.bigNextRoundOk'));
+      await load();
+    } catch {
+      toast.error(t('tournaments.bigActionError'));
+    } finally {
+      setBigControlSaving(false);
+    }
+  }
+
   if (!Number.isFinite(id) || id < 1) {
     return (
       <BrandLayout title={t('tournaments.badIdTitle')}>
@@ -140,10 +201,15 @@ export function TournamentDetailPage() {
       title={detail?.title ?? t('tournaments.detailLoadingTitle')}
       subtitle={detail ? t('tournaments.detailSubtitle', { status: detail.status }) : undefined}
     >
-      <div className="mb-6">
+      <div className="mb-6 flex flex-wrap items-center gap-2">
         <Link to="/tournaments" className={ghostButtonClass + ' inline-flex text-sm'}>
           {t('tournaments.backList')}
         </Link>
+        {!loading && detail && isOrganizer ? (
+          <Link to={`/tournaments/${id}/edit`} className={primaryButtonClass + ' inline-flex px-4 py-2 text-sm'}>
+            {t('tournaments.edit')}
+          </Link>
+        ) : null}
       </div>
 
       {loading ? (
@@ -199,6 +265,13 @@ export function TournamentDetailPage() {
           <section className={`${glassCardClass} mb-8`}>
             <h2 className="mb-2 text-lg font-semibold">{t('tournaments.rulesTitle')}</h2>
             <ul className="list-inside list-disc text-sm text-slate-600 dark:text-slate-300">
+              <li>
+                {detail.bigTournament
+                  ? t('tournaments.ruleScaleBig')
+                  : (detail.tournamentScale ?? 'MEDIUM') === 'SMALL'
+                    ? t('tournaments.ruleScaleSmall')
+                    : t('tournaments.ruleScaleMedium')}
+              </li>
               {!detail.hasCustomStages && detail.phasedFormat && detail.formatRules.length > 0 ? (
                 <>
                   <li className="mb-2 list-none font-medium text-emerald-700 dark:text-emerald-300">
@@ -233,17 +306,80 @@ export function TournamentDetailPage() {
 
           <section className={glassCardClass + ' mb-8'}>
             <h2 className="mb-4 text-lg font-semibold">{t('tournaments.teamsTitle')}</h2>
+            {detail.bigTournament && isOrganizer ? (
+              <div className="mb-4 rounded-2xl border border-emerald-300/60 bg-emerald-50/70 p-4 dark:border-emerald-500/30 dark:bg-emerald-950/20">
+                <h3 className="mb-2 text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+                  {t('tournaments.bigControlTitle')}
+                </h3>
+                <p className="mb-3 text-xs text-emerald-700/90 dark:text-emerald-300/90">
+                  {t('tournaments.bigControlHint', {
+                    golden: selectedGoldenTeamIds.length,
+                    nonGolden: nonGoldenSeedIds.length,
+                  })}
+                </p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="rounded-xl border border-slate-200/80 p-3 dark:border-white/10">
+                    <label className={labelClass}>{t('tournaments.bigStartBoLabel')}</label>
+                    <input
+                      className={inputClass}
+                      type="text"
+                      inputMode="numeric"
+                      value={startQualBoInput}
+                      onChange={(e) => setStartQualBoInput(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className={primaryButtonClass + ' mt-2 w-full'}
+                      onClick={onStartQualifiers}
+                      disabled={bigControlSaving}
+                    >
+                      {t('tournaments.bigStartQualifiers')}
+                    </button>
+                  </div>
+                  <div className="rounded-xl border border-slate-200/80 p-3 dark:border-white/10">
+                    <label className={labelClass}>{t('tournaments.bigNextBoLabel')}</label>
+                    <input
+                      className={inputClass}
+                      type="text"
+                      inputMode="numeric"
+                      value={nextRoundBoInput}
+                      onChange={(e) => setNextRoundBoInput(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className={ghostButtonClass + ' mt-2 w-full'}
+                      onClick={onCreateNextRound}
+                      disabled={bigControlSaving}
+                    >
+                      {t('tournaments.bigCreateNextRound')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
             {detail.teams.length === 0 ? (
               <p className="text-slate-500">{t('tournaments.noTeams')}</p>
             ) : (
               <ul className="space-y-4">
                 {detail.teams.map((team) => (
                   <li key={team.id} className="rounded-2xl border border-slate-200/80 p-4 dark:border-white/10">
-                    <p className="font-semibold">
-                      {team.teamName}{' '}
+                    <p className="flex flex-wrap items-center justify-between gap-2 font-semibold">
+                      <span>
+                        {team.teamName}{' '}
                       <span className="text-sm font-normal text-slate-500">
                         ({t('tournaments.captainLabel')}: {team.captainUsername})
                       </span>
+                      </span>
+                      {detail.bigTournament && isOrganizer ? (
+                        <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={selectedGoldenSet.has(team.id)}
+                            onChange={() => toggleGolden(team.id)}
+                          />
+                          {t('tournaments.bigGoldenToggle')}
+                        </label>
+                      ) : null}
                     </p>
                     <ul className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                       {team.members.map((m, idx) => (
