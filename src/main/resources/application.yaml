@@ -6,9 +6,10 @@ spring:
     name: SkyRush
   # Default: Render ichki PostgreSQL. Lokal: SPRING_R2DBC_URL / USERNAME / PASSWORD ni IDE yoki .env da localhost ga moslab qo‘ying.
   r2dbc:
-    url: ${SPRING_R2DBC_URL:r2dbc:postgresql://dpg-d7kmqffavr4c73e1eu2g-a.oregon-postgres.render.com:5432/skyrush?sslMode=verify-full}
+    # Render ichki tarmoq (bir xil regiondagi Web Service uchun). Tashqaridan ulanish: SPRING_R2DBC_URL ni external host + sslMode bilan qo‘ying.
+    url: ${SPRING_R2DBC_URL:r2dbc:postgresql://dpg-d7kmqffavr4c73e1eu2g-a:5432/skyrush}
     username: ${SPRING_R2DBC_USERNAME:skyrush_user}
-    password: ${SPRING_R2DBC_PASSWORD:vbD8eT8uqG4rmhEvduTZM4Ldy1crLrcX}
+    password: ${SPRING_R2DBC_PASSWORD:}
   sql:
     init:
       mode: always
@@ -16,10 +17,10 @@ jwt:
   secret: ${JWT_SECRET:juda_uzun_va_maxfiy_kalit_shu_yerda_bolishi_shart_32_belgi}
   expiration: 86400000 # 24 soat (ms da)
 
-# Bir nechta origin: vergul bilan ajratiladi (masalan Render static + lokal)
+# Bir nechta origin: vergul bilan ajratiladi (OAuth / brauzer so‘rovlari uchun aniq origin kerak)
 app:
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+    allowed-origins: "${CORS_ALLOWED_ORIGINS:http://localhost:5173,https://skyrush-frontent.onrender.com}"
 
 # Google Identity Services (Web) client ID — VITE bilan bir xil bo‘lishi kerak
 google:
